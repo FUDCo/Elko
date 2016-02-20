@@ -1,0 +1,57 @@
+#!/bin/bash
+
+DELIM=";"
+if [ ! $WINDIR ]; then
+  DELIM=":"
+fi  
+
+DIST=${DIST:-"../../Distrib"}
+
+DISTE=${DIST}/External
+DISTI=${DIST}/Internal
+
+if [ -f ../common/setlocvars ]; then
+  source ../common/setlocvars
+fi
+
+if [ -f setlocvars ]; then
+  source setlocvars
+fi
+
+DOMAIN=${DOMAIN:-"org.elkoserver"}
+
+HOST=${HOST:-`hostname`}
+
+BIND=${BIND:-${HOST}}
+
+MONGOHOST=${MONGOHOST:-127.0.0.1:27017}
+
+TRACE_DIR=${TRACE_DIR:-.}
+
+PORT_BASE=${PORT_BASE:-9000}
+
+PORT_OFFSET=${PORT_OFFSET:-0}
+
+CONT_PORT_BASE=${CONT_PORT_BASE:-$((${PORT_BASE} + ${PORT_OFFSET}))}
+
+BROK_PORT_BASE=${BROK_PORT_BASE:-$((${PORT_BASE} + 10))}
+
+WORK_PORT_BASE=${WORK_PORT_BASE:-$((${PORT_BASE} + 20))}
+
+GATE_PORT_BASE=${GATE_PORT_BASE:-$((${PORT_BASE} + 30))}
+
+PRES_PORT_BASE=${PRES_PORT_BASE:-$((${PORT_BASE} + 40))}
+
+REPO_PORT_BASE=${REPO_PORT_BASE:-$((${PORT_BASE} + 50))}
+
+DIRE_PORT_BASE=${DIRE_PORT_BASE:-$((${PORT_BASE} + 60))}
+
+JAVA_RUN=${JAVA_RUN:-"java -server -Xconcurrentio"}
+
+SERVER_JARS=${DISTI}/elkoserver.jar${DELIM}${DISTE}/mongo.jar${DELIM}${DISTE}/ScalableSSL.jar${DELIM}${DISTI}/fakessl.jar
+
+if [ ! $CLASSPATH ]; then
+  export CLASSPATH="${SERVER_JARS}"
+else
+  export CLASSPATH="${CLASSPATH}${DELIM}${SERVER_JARS}"
+fi

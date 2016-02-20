@@ -1,0 +1,58 @@
+<html>
+<head>
+    <title>Session Connection Tester (WebSockets version)</title>
+
+</head>
+    <body>
+        <fieldset><legend>Session Connection Tester</legend>
+        <input id="clear" type="button" value="Clear">
+        <input id="disconnect" type="button" value="Disconnect">
+        <input id="xmit" type="button" value="Xmit">
+        <textarea id="input" style="{width: 90%; height: 3in; font: mono; overflow: auto; margin: 10pt;}"></textarea>
+        <div id="log" style="border: 1px solid black; padding: 1em;"> </div></fieldset>
+        <script src="http://us.js2.yimg.com/us.js.yimg.com/lib/common/utils/2/yahoo_2.0.6.js"></script>
+        <script src="http://us.js2.yimg.com/us.js.yimg.com/lib/common/utils/2/event_2.0.6.js"></script>
+        <script src="json.js"></script>
+        <script src="connectionws.js"></script>
+        <script>
+
+String.prototype.entityify = function () {
+    return this.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+};
+
+
+(function () {
+    try {
+        var root = "ws://example.com:8000/test",
+            connection = ELKO.connection(root,
+                function (m) {
+                    log.innerHTML = '<p>' + JSON.stringify(m).entityify() +
+                        '<\/p>' + log.innerHTML;
+                },
+                function (m) {
+                    log.innerHTML = '<h3>' + JSON.stringify(m).entityify() +
+                        '<\/h3>' + log.innerHTML;
+                }),
+            log = document.getElementById('log'),
+            yue = YAHOO.util.Event;
+
+            yue.addListener('clear', 'click',
+                function (e) { log.innerHTML = ''; });
+            yue.addListener('disconnect', 'click',
+                function (e) { connection.disconnect(); });
+            yue.addListener('xmit', 'click',
+                function (e) {
+                    connection.send(document.getElementById('input').value);
+                });
+    } catch (e) {
+        var log = document.getElementById('log');
+        if (e && typeof e === 'object') {
+            e = JSON.stringify(e);
+        }
+        log.innerHTML = '<h3>' + e.entityify() + '<\/h3>' + log.innerHTML;
+    }
+}) ();
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  ref:"context-pres",
+  type:"context",
+  name:"Presentation",
+  capacity:20,
+  mods:[
+    { type:"chat" },
+    { type:"notemaker",
+      styles:{type:"styleoptions",
+              colors:["blue", "red", "green", "black"],
+              bgColors:["linen", "thistle", "papayawhip", "honeydew"],
+              borderColors:["dimgray", "peru", "lime"],
+              textStyles:["italic", "fancy", "dull", "bold"]
+             }
+    },
+    { type:"dictionary", 
+      names:["slideNr"], 
+      values:["0"],
+      persist:false 
+    }      
+  ]
+}
+

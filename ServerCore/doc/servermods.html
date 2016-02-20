@@ -1,0 +1,412 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Server Mods</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Basic Mod Set: Server View</h1>
+
+<p>The following documents the standard mod set from the server's perspective.
+Note that what follows does not detail the message protocols that these mods
+obey.  Consult the <a href="clientmods.html">Basic Mod Set: Client View</a>
+document for that information.
+
+<p>Note, however, that there are several mods that exist only on the server
+side, have no client presence, and are not directly visible to the client in
+any way.
+
+<h2>Cartesian</h2>
+
+<p>The <em>Cartesian</em> mod provides the item to which it is attached with
+simple two-dimensional cartesian geometry.  It also supports user manipulation
+of to the containership relation between objects.  This mod may not be attached
+to users or contexts.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"cart",<br>
+        left:<i>INT</i>,<br>
+        top:<i>INT</i>,<br>
+        width:<i>INT</i>,<br>
+        height:<i>INT</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>left</code> and <code>top</code> are the X and Y coordinates of the
+screen position (in pixels) of the assocated item, relative to the position of
+its container.</li>
+
+<li><code>width</code> and <code>height</code> are the X and Y screen
+dimensions (in pixels) of the associated item.</li>
+</ul>
+
+
+<h2>Census</h2>
+
+<p>The <em>Census</em> mod allows a client to survey the number of users in a
+context, even if the client cannot see those users directly.  It may be
+attached to any kind of object.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"census" }
+</code></div>
+
+<p>
+
+
+<h2>Chat</h2>
+
+<p>The <em>Chat</em> mod enables multi-user text chat in a context.  It is
+attached to a context, never to a user or item.  It may be configured to
+individually allow or disallow the <code>"say"</code> or <code>"push"</code>
+messages, both to the context as a whole (public chat or push) and to
+individual users (private chat or push).
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"chat",<br>
+        allowchat:<i>?BOOL</i>,<br>
+        allowprivate:<i>?BOOL</i>,<br>
+        allowpush:<i>?BOOL</i>,<br>
+        allowprivatepush:<i>?BOOL</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>allowchat</code> is a flag that controls whether users are allowed to
+send <code>"say"</code> messages to the region.  If omitted, it defaults to
+true.</li>
+
+<li><code>allowprivate</code> is a flag that controls whether users are allowed
+to send <code>"say"</code> messages to other users.  If omitted, it defaults to
+true.</li>
+
+<li><code>allowpush</code> is a flag that controls whether users are allowed to
+send <code>"push"</code> messages to the region.  If omitted, it defaults to
+true.</li>
+
+<li><code>allowprivatepush</code> is a flag that controls whether users are
+allowed to send <code>"push"</code> messages to other users.  If omitted, it
+defaults to the logical AND of the <code>allowprivate</code> and
+<code>allowpush</code> flags.</li>
+</ul>
+
+
+<h2>ContextKey</h2>
+
+<p>The <em>ContextKey</em> mod enables entry to restricted entry contexts.  It
+may be attached to a user or item, but doesn't make sense to be attached to a
+context.  When a user attempts to enter a restricted context, the server checks
+to see if the user has a <em>ContextKey</em> mod attached or contains (at some
+level of nesting) an item with a <em>ContextKey</em> attached and that the
+<em>ContextKey</em> enables entry to the context.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"ctxkey",<br>
+        contexts:[<i>CTXREF_STR</i>],<br>
+        transferrable:<i>?BOOL</i>,<br>
+        deletable:<i>?BOOL</i>,<br>
+        expiration:<i>?LONG</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>contexts</code> is an array of context reference strings identifying
+the contexts to which this mod grants access.</li>
+
+<li><code>transferrable</code> is flag that, if present and false, marks the
+key as transferrable to another user.  If it is not transferrable (it is by
+default), the server will prevent it from being moved to a containership
+hierarchy other than the one it is presently in.  This flag only makes sense
+when the mod is attached to an item.</li>
+
+<li><code>deletable</code> is a flag that, if present and false, prevents the
+item to which the key is attached from being deleteable (items are deletable by
+default).</li>
+
+<li><code>expiration</code> is a number encoding a Unix timestamp that, if
+present, establishes an expiration time for the key.  After this time it will
+no longer grant entry to any context.  A value of 0 (the default) indicates
+that the key does not expire.</li>
+</ul>
+
+
+<h2>Dictionary</h2>
+
+<p>The <em>Dictionary</em> mod associates a server-moderated name/value lookup
+table with the object to which it is attached.  It may be attached to a
+context, user or item.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"dictionary", names:[<i>STR</i>], values:[<i>STR</i>], persist:<i>?BOOL</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>names</code> is an array of strings, containing the dictionary's
+lookup keys.</li>
+
+<li><code>values</code> is an array of strings parallel to <code>names</code>,
+containing the values.  For a given element of <code>names</code>, the element
+of <code>values</code> with the same array index contains that name's
+value.</li>
+
+<li><code>persist</code> is a flag that, if present and true, makes the state
+of the dictionary persistent.  That is, when the object to which this mod is
+attached is checkpointed, the current state of the name/value settings is saved
+with it.  If it is not persistent, then when the enclosing context is shut
+down, any changes will be lost, and the next time the object is loaded it will
+revert to its original settings.</li>
+</ul>
+
+
+<h2>Image</h2>
+
+<p>The <em>Image</em> mod associates an image with the object to which it is
+attached.  It may be attached to any kind of object, but normally it will be
+attached to items.  This mod is purely a data object; it has no behavior and no
+message protocol.  It is up to the client application to make use of this data
+appropriately.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"image", img:<i>STR</i>, width:<i>?INT</i>, height:<i>?INT</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>img</code> is the URL of an image.</li>
+
+<li><code>width</code> and <code>height</code>, if given, represent the
+horizontal and vertical extent of this image, in pixels.</li>
+</ul>
+
+
+<h2>Invisible</h2>
+
+<p>The <em>Invisible</em> mod causes the item to which it is attached to be
+hidden from clients.  That is, any such items will not be included in the
+contents of their containers when these contents are transmitted to clients.
+The contents of an invisible item are thus also effectively invisible, even if
+they do not themselves have this mod attached.  This mod may only be attached
+to an item and never to a context or user.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"invisible" }
+</code></div>
+
+<p>
+
+<h2>Note</h2>
+
+<p>The <em>Note</em> mod associates a block of editable text with the item to
+which it is attached.  It must be attached to an item, not a context or user.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"note", text:<i>STR</i>, style:<i>?STYLEDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>text</code> is the text of the note.</li>
+
+<li><code>style</code> is an optional style description for rendering the text.
+See below for details on the style descriptor object.</li>
+</ul>
+
+
+<h2>NoteMaker</h2>
+
+<p>The <em>NoteMaker</em> mod provides a facility for creating new items with
+<em>Notes</em> attached.  It is normally attached to the context, but this is
+not required.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"notemaker", styles:<i>STYLEOPTIONSDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>styles</code> is a collection of style options that can constrain the
+styles associated with notes this mod creates.  See below for details on the
+style options descriptor object.</li>
+</ul>
+
+
+<h2>TalkOptions</h2>
+
+<p>The <em>TalkOptions</em> mod describes controls the style information
+associated with user utterances displayed as a result of <code>"say"</code>
+messages.  This mod must be attached to a context, not to a user or item.  It
+operates in conjunction with the <em>Chat</em> and <em>TalkPrefs</em> mods.
+This mod is purely a data object; it has no message protocol.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"talkoptions", styles:<i>STYLEOPTIONSDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>styles</code> is a collection of style options that can constrain the
+styles associated with chat.  See below for details on the style options
+descriptor object.</li>
+</ul>
+
+
+<h2>TalkPrefs</h2>
+
+<p>The <em>TalkPrefs</em> mod holds a user's current chat text display style
+settings.  It operates in conjunction with the <em>Chat</em> and
+<em>TalkOptions</em> mods.  It is always attached to a user.  It always
+ephemeral, and so has no persistent representation.
+
+
+<h2><i>Descriptor Objects</i></h2>
+
+<p>There are a couple of JSON objects that are used to carry standard bundles
+of information in the representations of certain mods and in some messages.
+These are not mods or messages themselves, but simply bundles of data.
+
+<h2>Style Descriptor</h2>
+
+<p>The style descriptor contains information for the rendering of text.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"style",<br>
+        color:<i>?STR</i>,<br>
+        backgroundColor:<i>?STR</i>,<br>
+        borderColor:<i>?STR</i>,<br>
+        textStyle:<i>?STR</i>,<br>
+        icon:<i>?STR</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>color</code>, if given, is the name of the text color.</li>
+
+<li><code>backgroundColor</code>, if given, is the name of the text background
+color.</li>
+
+<li><code>borderColor</code>, if given, is the name of the text border
+color.</li>
+
+<li><code>textStyle</code>, if given, is an HTML CSS style string for a text
+element.</li>
+
+<li><code>icon</code>, if given, is the URL of a marker icon.</li>
+</ul>
+
+<p>All elements are optional.  Color names are standard HTML color names.
+
+
+<h2>Style Options Descriptor</h2>
+
+<p>The style options descriptor contains a collection of text style
+information.  It represents a range of permitted style values for use in
+preference setting and display.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"styleoptions",<br>
+        colors:[<i>STR</i>],<br>
+        backgroundColors:[<i>STR</i>],<br>
+        borderColors:[<i>STR</i>],<br>
+        textStyles:[<i>STR</i>],<br>
+        icons:[<i>STR</i>],<br>
+        iconWidth:<i>?INT</i>,<br>
+        iconHeight:<i>?INT</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>colors</code>, if given, is a series of permissible text color
+names.</li>
+
+<li><code>backgroundColors</code>, if given, is a series of permisslbe text
+background color names.</li>
+
+<li><code>borderColors</code>, if given, is a series of permissible text border
+color names.</li>
+
+<li><code>textStyles</code>, if given, is a series of permissible text style
+strings.</li>
+
+<li><code>icons</code>, if given, is a series of permissible marker icon URL
+strings.</li>
+
+<li><code>iconWidth</code> and <code>iconHeight</code>, if given, are the
+common width and height, pixels, of the icons specified by the
+<code>icons</code> attribute.</li>
+</ul>
+
+<p>All elements are optional.
+
+</div>
+</div>
+</body>
+</html>
+

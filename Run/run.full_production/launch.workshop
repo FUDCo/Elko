@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PORT_OPEN=${WORK_PORT_BASE}
+PORT_PSWD=$((${WORK_PORT_BASE} + 1))
+
+BROKER_PORT=$((${BROK_PORT_BASE} + 1))
+
+php ../manage/genlaunch.php runcmd.workshop workshop
+source runcmd.workshop

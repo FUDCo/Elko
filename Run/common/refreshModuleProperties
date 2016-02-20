@@ -1,0 +1,36 @@
+#!/bin/bash
+
+MODULE_JARS=localmodules/*.jar
+PROP_FILE=modules.properties
+
+CLASSES_PROP='conf.context.classdesc=classes-app,classes-bank'
+CLASSES_STARTED=1
+STATICS_PROP='conf.context.statics='
+STATICS_STARTED=0
+for JAR in $MODULE_JARS; do
+   MOD=`basename $JAR .jar`
+   if [ "$MOD" != '*' ]; then
+      if [ $CLASSES_STARTED != 0 ]; then
+         CLASSES_PROP="${CLASSES_PROP},"
+      else
+         CLASSES_STARTED=1
+      fi
+      CLASSES_PROP="${CLASSES_PROP}classes-${MOD}"
+      if [ $STATICS_STARTED != 0 ]; then
+         STATICS_PROP="${STATICS_PROP},"
+      else
+         STATICS_STARTED=1
+      fi
+      STATICS_PROP="${STATICS_PROP}statics-${MOD}"
+   fi
+done
+rm -f $PROP_FILE
+touch $PROP_FILE
+if [ $CLASSES_STARTED != 0 ]; then
+    echo $CLASSES_PROP >> $PROP_FILE
+fi
+if [ $STATICS_STARTED != 0 ]; then
+    echo $STATICS_PROP >> $PROP_FILE
+fi
+
+

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Startup a cluster.
+#
+# usage: clusterStart [CLUSTER]
+#
+# Execute from the common directory or from a cluster run directory.
+# If CLUSTER is omitted, the cluster in the current directory will be started.
+
+if [ $1 ]; then
+    if [ -e ../run.$1 ]; then
+        cd ../run.$1
+    else
+        echo "No cluster $1"
+        exit 1
+    fi
+fi
+
+if mkdir control/clusterStartupLock; then
+    echo "clusterStart running in $PWD"
+    if [ -e broker.runparams ]; then
+        BROKER_RUNPARAMS=`cat broker.runparams`
+        echo "clusterStart found broker.runparams: $BROKER_RUNPARAMS"
+        echo "clusterStart attempting to ping broker"
+        PROBE=`../common/brokercmd ping $BROKER_RUNPARAMS`
+        if [ "$PROBE" ]; then
+            echo "clusterStart got positive response from ping"
+            BROKER_FOUND=yes
+        else
+            echo "clusterStart got no response from ping"
+            BROKER_FOUND=no
+        fi
+    else
+        echo "clusterStart did not find broker.runparams"
+        BROKER_FOUND=no
+    fi
+    echo "clusterStart BROKER_FOUND = $BROKER_FOUND"
+    if [ $BROKER_FOUND = "no" ]; then
+        echo "clusterStart invoking startComponent broker"
+        ../common/startComponent broker
+        echo "clusterStart started broker, setting run on"
+        touch control/clusterRunOn
+	sleep 3
+    fi
+    rmdir control/clusterStartupLock
+else
+    echo "clusterStart start lock blocked concurrent startup"
+fi
+echo "clusterStart done"

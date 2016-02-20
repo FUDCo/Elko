@@ -1,0 +1,51 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=Gatekeeper
+endif
+
+#set SERVER_HOST=${HOST}.${DOMAIN}
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN = ${GATE_PORT_BASE}
+@ PORT_PSWD = ${GATE_PORT_BASE} + 1
+
+@ DPORT = ${DIRE_PORT_BASE}
+@ BPORT = ${BROK_PORT_BASE}
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_gate=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=gatelog \
+   tracelog_dir=${TRACE_DIR} \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN} \
+   conf.listen.protocol=tcp \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=any \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_PSWD} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_PSWD} \
+   conf.listen1.protocol=tcp \
+   conf.listen1.auth.mode=password \
+   conf.listen1.auth.code=figleaf \
+   conf.listen1.allow=admin \
+   \
+   conf.gate.director.host=${SERVER_HOST}:${DPORT} \
+#   conf.gate.director.auto=true \
+   \
+   conf.gate.odb=mongo \
+   conf.gate.odb.mongo.hostport=${MONGOHOST} \
+   conf.gate.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+   \
+   conf.gate.name=${SERVER_NAME} \
+   conf.broker.host=${SERVER_HOST}:${BPORT} \
+   \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.gatekeeper.GatekeeperBoot \
+   $*
+

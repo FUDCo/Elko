@@ -1,0 +1,11 @@
+{
+  ref:"item-dict",
+  type:"item",
+  name:"a dictionary item",
+  mods:[
+    { type:"dictionary", names:["a1","a2","a3","a4"],
+                         values:["fee","fie","fo","fum"]
+    }
+  ]
+}
+

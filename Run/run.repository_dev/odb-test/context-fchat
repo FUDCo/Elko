@@ -1,0 +1,20 @@
+{type:"context",
+  basecapacity:20,
+  capacity:30,
+  name:"Styled chat context",
+  mods:[
+    { type:"chat" },
+    { type:"talkoptions",
+         styles:{type:"styleoptions",
+                 colors:["blue", "red", "green"],
+                 bgColors:["cyan", "brown", "olive"],
+                 textStyles:["italic", "fancy", "dull", "bold"],
+                 iconWidth:20,
+                 iconHeight:20
+                }
+     }
+  ],
+  usermods:[
+    { type:"talkprefs", style:{type:"style" } }
+  ]
+}

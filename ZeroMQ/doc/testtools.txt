@@ -1,0 +1,59 @@
+Testing ZMQ Support
+
+There are two simple command line apps included in the elkozmq.jar
+bundle, ZMQSender and ZMQReceiver, that respectively act as sources and sinks
+of ZMQ messages.
+
+ZMQReceiver receives messages over a ZMQ socket and prints them to stdout.
+
+Usage:
+
+   java org.elkoserver.foundation.net.zmq.test.ZMQReceiver <ADDRESS>
+
+where <ADDRESS> is the address to listen for ZQM messages on.  Addresses are
+expressed in the form:
+
+    [<MODE>:]<HOST>:<PORT>
+
+Where:
+
+   <MODE> indicates the desired ZMQ connection mode.  The two available options
+are PULL and SUB, with PULL as the default if the mode is left unspecified.
+
+   <HOST> is the host name associated with the connection (the bind address in
+   the case of PULL, the publisher to connect to in the case of SUB).
+
+   <PORT> is the port number of the connection.
+
+For example: SUB:foo.bar.com:5555 would subscribe to messages published by
+foo.bar.com on port 5555.
+
+
+ZMQSender reads JSON messages fed to stdin and sends them to a ZMQ socket.
+
+Usage:
+
+   java org.elkoserver.foundation.net.zmq.test.ZMQSender <ADDRESS>
+
+where <ADDRESS> is the address to feed ZQM messages to.  Addresses are
+expressed in the form:
+
+    [<MODE>:]<HOST>:<PORT>
+
+Where:
+
+   <MODE> indicates the desired ZMQ connection mode.  The two available options
+are PUSH and PUB, with PUB as the default if the mode is left unspecified.
+
+   <HOST> is the host name associated with the connection (the bind address in
+   the case of PUB, the puller to connect to in the case of PUSH).
+
+   <PORT> is the port number of the connection.
+
+For example: PUSH:foo.bar.com:5555 would deliver messages to the puller at
+foo.bar.com on port 5555.
+
+
+These two can be used together, running each in its own terminal window, to set
+up a PUB/SUB pair or a PUSH/PULL pair to verify that ZMQ is working on your
+machine.

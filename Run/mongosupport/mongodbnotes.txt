@@ -1,0 +1,77 @@
+This distribution of Elko uses MongoDB to maintain critical configuration
+information. In particular, MongoDB is used to store metadata that enables the
+server to interpret JSON-serialized objects. MongoDB is also the default choice
+of database for containing the persistent state of users, contexts, and items
+(hence its use as the repository for the metadata that allows these objects to
+be read into the server's memory).
+
+The shell script dbinit.sh (in the Scripts directory) will connect to the local
+MongoDB instance, initialize a database named 'elko', and populate it with
+the essential configuration data as well as a selection of default user,
+context, and item objects to get you started.  As distributed, this script will
+connnect to the standard default MongoDB host and port (localhost, port 27017);
+if your MongoDB runs someplace else, you should modify this script accordingly.
+
+The file mongohelper.js contains an assortment of useful functions to be used
+within the MongoDB client shell to manipulate the database in accordance with
+various conventions we use repeatedly. We recommend you define a shell alias:
+
+    alias mongo 'YOUR-MONGO-PATH/mongo elko --shell YOUR-ELKO-PATH/db/mongohelper.js' 
+
+---
+
+mongo.jar (2.4) is unmodified open source software and is provided here for
+convenience.
+
+It is strongly suggested that you go to http://mongodb.org to get the latest
+Java driver software version and replace this file with it.
+
+It is subject to the terms at http://mongodb.org.
+
+---
+
+More MongoDB usage notes:
+
+Another useful alias, if you have MongoDB installed locally and want to
+start it yourself:
+
+    alias mongod 'YOUR-MONGO-PATH/mongod --dbpath YOUR-DESIRED-DB-PATH'
+
+This will start a local MongoDB instance running.  For production use, of
+course, you'll want to configure your MongoDB instance to launch at system
+startup as a regular system daemon per the instructions on the mongodb.org
+website.
+
+
+All our stuff is kept in a database named 'elko', principally in a collection
+named 'odb'.  Persistent objects are conventionally indexed by a field named
+'ref'.
+
+For example, if you type this command into the mongo shell:
+
+    db.odb.find({ref:"u-randy"})
+
+it will fetch Randy's user record.  For routine use, the latter is more
+conveniently expressed as:
+
+    eget("u-randy")
+
+The eget() function, provided in the mongohelper.js utility library mentioned
+above, just fetches the named thing, whatever it is, from the appropriate
+place.  Other useful utility commands can be learned about by typing:
+
+    mhelp()
+
+Another very useful command to know (two separate commands, actually):
+
+    use admin
+    db.shutdownServer()
+
+This does a clean server shutdown.
+
+You can just kill the server, but then you have to go through some additional
+effort to recover the database before you can start it up again.
+
+The OTHER really useful important mongo shell command: "quit()" also spelled
+"exit" (but NOT "quit" or "exit()").
+

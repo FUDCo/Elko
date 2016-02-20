@@ -1,0 +1,4 @@
+#!/bin/bash
+
+php ../manage/genlaunch.php runcmd.presence presence
+source runcmd.presence

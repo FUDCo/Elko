@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Shutdown an entire cluster, retaining current component run settings.
+#
+# usage: clusterStop [CLUSTER]
+#
+# Execute from the common directory or from a cluster run directory.
+# If CLUSTER is omitted, the cluster in the current directory will be stopped.
+
+if [ $1 ]; then
+    if [ -e ../run.$1 ]; then
+        cd ../run.$1
+    else
+        echo "No cluster $1"
+        exit 1
+    fi
+fi
+
+echo "clusterStop running in $PWD"
+if [ -e broker.runparams ]; then
+    BROKER_RUNPARAMS=`cat broker.runparams`
+    echo "clusterStop found broker.runparams: $BROKER_RUNPARAMS"
+    echo "clusterStop attempting to ping broker"
+    PROBE=`../common/brokercmd ping $BROKER_RUNPARAMS`
+    if [ "$PROBE" ]; then
+        echo "clusterStop got positive response from ping"
+        BROKER_FOUND=yes
+    else
+        echo "clusterStop got no response from ping"
+        BROKER_FOUND=no
+    fi
+else
+    echo "clusterStop did not find broker.runparams"
+    BROKER_FOUND=no
+fi
+if [ $BROKER_FOUND = "yes" ]; then
+    echo "clusterStop setting run off"
+    rm control/clusterRunOn
+    echo "clusterStop invoking brokercmd stopall"
+    ../common/brokercmd stopall $BROKER_RUNPARAMS
+    echo "clusterStop setting startmode to 'restart'"
+    echo "restart" > broker.startmode
+else
+    echo "No broker found.  Is cluster already stopped?"
+fi
+echo "clusterStop done"
+
+

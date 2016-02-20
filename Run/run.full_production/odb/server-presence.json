@@ -1,0 +1,41 @@
+{
+  "type": "serverconfig",
+  "ref": "server-presence",
+  "component": "presence",
+  "name": "presence",
+  "bootclass": "org.elkoserver.server.presence.PresenceServerBoot",
+  "portbase": 9000,
+  "trace": {
+    "levels": { "pres": "EVENT", "comm": "EVENT" },
+    "dir": "./logs",
+    "rollover": "daily"
+  },
+  "shutdownpassword": "figleaf",
+  "msgdiagnostics": true,
+  "listeners": [
+    { "host": "${HOST}",
+      "bind": "${BIND}",
+      "port": 0,
+      "protocol": "tcp",
+      "allow": "any",
+      "auth": { "mode": "open" }
+    },
+    { "host": "${HOST}",
+      "bind": "${BIND}",
+      "port": 1,
+      "protocol": "tcp",
+      "allow": "admin",
+      "auth": { "mode": "password", "code": "figleaf" }
+    }
+  ],
+  "broker": {
+    "host": "${HOST}",
+    "port": 1,
+    "auth": { "mode": "password", "code": "figleaf" }
+  },
+  "odb": {
+    "kind": "mongo",
+    "hostport": "${MONGOHOST}",
+    "objstore": "org.elkoserver.objdb.store.mongostore.MongoObjectStore"
+  }
+}

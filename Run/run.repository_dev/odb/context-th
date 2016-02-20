@@ -1,0 +1,9 @@
+{
+  ref:"context-th",
+  type:"context",
+  name:"Lancre",
+  capacity:10,
+  mods:[{ type:"chat" }],
+  ref$contents:["item-thneed", "item-dict", "item-pdict"]
+}
+

@@ -1,0 +1,12 @@
+{
+  ref:"item-pdict",
+  type:"item",
+  name:"a persistent dictionary item",
+  mods:[
+    { type:"dictionary", names:["b1","b2","b3","b4"],
+                         values:["bip","bop","bam","boom"],
+                         persist:true
+    }
+  ]
+}
+

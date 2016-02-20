@@ -1,0 +1,4 @@
+#!/bin/csh
+
+setenv JAVA_RUN jdb
+./start

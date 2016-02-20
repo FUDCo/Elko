@@ -1,0 +1,10 @@
+{
+  ref:"context-clontest",
+  type:"context",
+  name:"Dangerous clone testing area",
+  capacity:10,
+  basecapacity:2,
+  mods:[{ type:"chat" },
+         { type:"clonetest" } ]
+}
+

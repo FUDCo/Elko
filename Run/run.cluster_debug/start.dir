@@ -1,0 +1,76 @@
+#!/bin/csh
+
+set PORT_BASE=9100
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=DirectorDebug
+endif
+
+#set SERVER_HOST=${HOST}.${DOMAIN}
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN_TCP  = ${DIRE_PORT_BASE}
+@ PORT_OPEN_RTCP = ${DIRE_PORT_BASE} + 1
+@ PORT_PSWD_TCP  = ${DIRE_PORT_BASE} + 2
+@ PORT_PSWD_RTCP = ${DIRE_PORT_BASE} + 3
+@ PORT_OPEN_HTTP = ${DIRE_PORT_BASE} + 4
+
+@ BPORT = ${BROK_PORT_BASE}
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_dire=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=dirlog \
+   tracelog_dir=${TRACE_DIR} \
+   \
+#   conf.comm.httptimeout=3000 \
+   conf.comm.httptimeout=180 \
+#   conf.comm.httpselectwait=300 \
+   conf.comm.httpselectwait=30 \
+   conf.comm.rtcptimeout=300 \
+   conf.comm.rtcpdisconntimeout=60 \
+   conf.comm.rtcpbacklog=50000 \
+   conf.context.entrytimeout=300 \
+   conf.comm.jsonstrictness=true \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN_TCP} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN_TCP} \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=user \
+   conf.listen.protocol=tcp \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_OPEN_RTCP} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_OPEN_RTCP} \
+   conf.listen1.auth.mode=open \
+   conf.listen1.allow=user \
+   conf.listen1.protocol=rtcp \
+   \
+   conf.listen2.host=${SERVER_HOST}:${PORT_PSWD_TCP} \
+   conf.listen2.bind=${SERVER_BIND}:${PORT_PSWD_TCP} \
+   conf.listen2.auth.mode=open \
+   conf.listen2.allow=any \
+   conf.listen2.protocol=tcp \
+   \
+   conf.listen3.host=${SERVER_HOST}:${PORT_PSWD_RTCP} \
+   conf.listen3.bind=${SERVER_BIND}:${PORT_PSWD_RTCP} \
+   conf.listen3.auth.mode=open \
+   conf.listen3.allow=any \
+   conf.listen3.protocol=rtcp \
+   \
+   conf.listen4.host=${SERVER_HOST}:${PORT_OPEN_HTTP} \
+   conf.listen4.bind=${SERVER_BIND}:${PORT_OPEN_HTTP} \
+   conf.listen4.protocol=http \
+   conf.listen4.domain=${DOMAIN} \
+   conf.listen4.root=test \
+   conf.listen4.auth.mode=open \
+   conf.listen4.allow=user \
+   \
+#   conf.broker.host=${SERVER_HOST}:${BPORT} \
+   conf.director.name=${SERVER_NAME} \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.director.DirectorBoot \
+   $*
+

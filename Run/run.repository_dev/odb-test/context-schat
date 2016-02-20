@@ -1,0 +1,18 @@
+{ type:"context", 
+  name:"Text Chat", 
+  basecapacity:20,
+  capacity:30,
+  mods:[
+    { type:"chat" },
+    { type:"talkoptions",
+      styles:{type:"styleoptions",
+              colors:["blue", "purple", "brown", "black"],
+              bgColors:["linen", "thistle", "gainsboro", "honeydew"],
+             }
+    }
+  ],
+  usermods:[
+    { type:"talkprefs", style:{type:"style" } }
+  ]
+}
+

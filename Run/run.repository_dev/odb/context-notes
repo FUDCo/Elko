@@ -1,0 +1,15 @@
+{
+ ref:"contex-notes",
+ type:"context",
+ capacity:10,
+ name:"Note context",
+ mods:[{type:"chat"},
+        {type:"notemaker",
+         styles:{type:"styleoptions",
+                 colors:["blue", "red", "green", "black"],
+                 bgColors:["linen", "thistle", "papayawhip", "honeydew"],
+                 borderColors:["dimgray", "peru", "lime"],
+                 textStyles:["italic", "fancy", "dull", "bold"]
+                }
+       }]
+}

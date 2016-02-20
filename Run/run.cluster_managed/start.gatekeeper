@@ -1,0 +1,47 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=Gatekeeper
+endif
+
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${BIND}
+
+@ PORT_OPEN = ${GATE_PORT_BASE}
+@ PORT_PSWD = ${GATE_PORT_BASE} + 1
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_gate=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=gatekeeper \
+   tracelog_dir=${TRACE_DIR} \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN} \
+   conf.listen.protocol=tcp \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=any \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_PSWD} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_PSWD} \
+   conf.listen1.protocol=tcp \
+   conf.listen1.auth.mode=password \
+   conf.listen1.auth.code=figleaf \
+   conf.listen1.allow=admin \
+   \
+   conf.register.auto=true \
+   conf.broker.host=${BROKERCHECKINPORT} \
+   \
+   conf.gate.director.auto=true \
+   conf.gate.name=${SERVER_NAME} \
+   conf.gate.odb=mongo \
+   conf.gate.odb.mongo.hostport=${MONGOHOST} \
+   conf.gate.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+#   conf.res.classdesc="classes-test" \
+   \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.gatekeeper.GatekeeperBoot \
+   $*
+

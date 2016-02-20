@@ -1,0 +1,39 @@
+#!/bin/bash
+
+RUN_DIR=$(cd "$(dirname "$0")/.."; pwd)
+
+OSTYPE=`uname -s`
+
+cd $RUN_DIR
+
+while [ true ]; do
+    CONTROL_DIRS=`echo run.*/control`
+    for DIR in $CONTROL_DIRS; do
+        echo "brokerwatcher checking $DIR"
+        cd $DIR/..
+        if [ -e control/clusterRunOn ]; then
+            echo "brokerwatcher finds run setting on, invoking clusterStart"
+            ../common/clusterStart
+        fi
+        cd ..
+    done
+    echo "brokerwatcher going to sleep until something happens"
+    case "$OSTYPE" in
+        Darwin)
+            echo "brokerwatcher wait cmd: kqwait -t 60 $CONTROL_DIRS"
+            kqwait -t 60 $CONTROL_DIRS
+            ;;
+        SunOS)
+            echo "brokerwatcher wait cmd: portwait -t 60 $CONTROL_DIRS"
+            portwait -t 60 $CONTROL_DIRS
+            ;;
+        Linux)
+            echo "brokerwatcher wait cmd: inotifywait -q -t 60 -e modify -e attrib -e create -e delete $CONTROL_DIRS"
+            inotifywait -q -t 60 -e modify -e attrib -e create -e delete $CONTROL_DIRS
+            ;;
+        *)
+            sleep 60
+            ;;
+    esac
+    echo "brokerwatcher wakes up from waiting"
+done

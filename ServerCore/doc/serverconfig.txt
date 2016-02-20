@@ -1,0 +1,381 @@
+Elko Server Property Reference
+
+In the descriptions of the properties and their values below, quotation
+marks ('"') delimit literal entities, angle brackets ('<' and '>') denote
+meta-symbols, and the plus sign ('+') indicates concatenation.
+
+There are three data types used for property values.  Each has been assigned a
+three letter abbreviation:
+
+  str  A string
+  int  An integer numeric value
+  flg  A boolean flag; may take the values "true" or "false".
+  ---  Used in descriptions of 'families' of properties
+
+The underlying property mechanism can also handle floating point values but
+this feature is not currently used by any of the servers.
+
+=== The Properties ===
+
+Meta symbols:
+
+  <N>: { A small integer or the empty string, used in the construction of
+         property names for describing network listeners or remote hosts to
+         connect to.  The integer is suffixed to the property root name and
+         treated as if it were an array index or subscript. }
+
+
+  <HostSpec>: { A family of properties that describe a host to be connected to
+         for some purpose. The names given here are suffixed to a root name to
+         form the actual property name to be set. The root name determines what
+         the host information will be used for. }
+
+    str ".host"      { Host name or dotted-quad IP address, optionally followed
+                       by a ":" and the port number.  If the port number is
+                       unspecified, a default port may be used, but what the
+                       default is depends on the context. }
+    str ".protocol"  { Specifies the protocol to be used for connecting to the
+                       host. Currently valid values are "tcp" (the default) or
+                       "http". }
+    --- <AuthSpec>:  { The authorization parameters required to connect to this
+                       host. }
+    flg ".dontlog"   { If true, don't include message traffic to and from this
+                       host in the server's log, even if message logging is
+                       turned on in general. }
+    int ".retry"     { Certain kinds of host connections (such as connections
+                       to a broker) will be repeatedly retried if the initial
+                       connection attempt fails. This property sets the retry
+                       interval (i.e., how long to wait before trying again.
+                       The default is 15 seconds. }
+
+
+  <AuthSpec>: { A family of properties that describe the authorization
+                parameters necessary to connect to a host, either from the
+                perspective of the host itself (i.e., what it is looking for in
+                a connection authorization attempt) or from the perspective of
+                a client (i.e., what the host wants to be given). }
+
+    str ".auth.mode" { Authorization mode to use. Valid values vary depending
+                       on the type of server this is: for most servers,
+                       acceptable values are "open" (meaning no authorization
+                       required) or "password" (meaning that a password is
+                       required); for the Context Server, valid values are
+                       "open" or "reservation" (meaning that reservations are
+                       required for user entry). In all cases "open" is the
+                       default. }
+    str ".auth.code" { Authorization information as required by whatever
+                       setting was given for the ".auth.mode" property.
+                       Currently, the only authorization mode that uses this
+                       property is "password", in which case this property
+                       contains the password. }
+    str ".auth.id"   { Authorization ID to use.  What value goes here depends
+                       on the authorization mode being used, though typically
+                       this value is dynamic rather than being configured via
+                       properties. }
+
+
+  <LocalObjStoreSpec>: { A family of properties that configure a local object
+        store. This is the local implementation of the Elko object database
+        interface that is used by Repositories and by repository clients (right
+        now the Context Server and Gatekeeper) that aren't using a remote
+        Repository. }
+    str ".objstore"    { Fully qualified class name of the Java class
+                         implementing the
+                         org.elkoserver.objdb.store.ObjectStore interface.  The
+                         remaining repository properties depend on what
+                         implementation class is selected. }
+
+    when <root> + ".objstore" is
+      org.elkoserver.objdb.store.filestore.FileObjectStore:
+    str ".odb"         { Pathname, relative to the server's current working
+                         directory, of the directory containing the files
+                         holding the database objects (in simpler terms, the
+                         'object database directory'). }
+
+
+  <ReposSpec>: { A family of properties that configure access to repository
+                 services, either via a local object database or by connecting
+                 to a remote Repository. }
+    for all repositories:
+      str ".classdesc"               { Optional list of object ID strings for
+                                       class descriptor objects that should be
+                                       loaded when the repository is opened
+                                       (these are in addition to the default
+                                       class descriptor object named "classes",
+                                       which is always loaded regardless of the
+                                       setting of this property). Multiple IDs
+                                       may be separated by ":". }
+    for local repositories only:
+      --- <LocalObjStoreSpec>        { Configuration of local object store, in
+                                       the case where a Repository is not
+                                       being used. }
+    for remote repositories only:
+      --- ".repository" + <HostSpec> { Host info indicating what Repository to
+                                       connect to. These properties should be
+                                       set if you are configuring the
+                                       Repository connection manually (i.e.,
+                                       without using a Broker). }
+      str ".repository.service"      { Label of repository to ask the Broker
+                                       for.  This will be concatenated to the
+                                       string "rep/rep/" to form the full
+                                       service name that will be sought from
+                                       the Broker (i.e., if you set this
+                                       property to "foo", the Broker will be
+                                       asked for the service "rep/rep/foo").
+                                       Alternatively, the value "any" will
+                                       cause the requested service name to be
+                                       "rep/rep", which will seek any
+                                       Repository known to the Broker. }
+
+
+General properties (used in all or most servers):
+  int "conf.comm.httptimeout"         { Timeout, in seconds, for HTTP
+                                        connections that are still waiting for
+                                        a message from the user's browser to
+                                        keep the session alive. }
+  int "conf.comm.httptimeout.debug"   { Alternate value for above when a user
+                                        logs in in debug mode. }
+  int "conf.comm.httpselectwait"      { Timeout, in seconds, to wait on open
+                                        HTTP message select before replying
+                                        with a keep-alive message. }
+  int "conf.comm.httpselectwait.debug" { Alternate value for above when a user
+                                        logs in in debug mode. }
+  flg "conf.comm.jsonstrictness"      { If true (defaults to false), JSON
+                                        literals will be generated according to
+                                        "strict" JSON rules, meaning that
+                                        property names will be in the form of
+                                        strings and '/' characters in string
+                                        literals will be escaped; this is safer
+                                        for the browser but somewhat wasteful
+                                        of bandwidth and really hard on the
+                                        eyes. }
+  int "conf.load.time"                { Sample interval, in seconds, for
+                                        measuring server load.  The default is
+                                        300 (i.e., 5 minutes). }
+  flg "conf.load.log"                 { If true (defaults to false), directs
+                                        server to write load reports to the
+                                        server log. This is in addition to
+                                        reporting the load to the Broker and/or
+                                        Directors. }
+  flg "conf.msgdiagnostics"           { If true, any message handler methods
+                                        that return an error result will cause
+                                        a diagnostic message to be sent to the
+                                        client who sent the offending
+                                        message. If false (the default), such
+                                        errors will not be reported to the
+                                        client (though they will be reported in
+                                        the server log). }
+  flg "conf.debugsessions"            { If true, HTTP session IDs are generated
+                                        by an incrementing counter, making them
+                                        predictable to aid in debugging using
+                                        static scripts. If false (the default),
+                                        session IDs are geerated using the
+                                        secure random number generator, making
+                                        them securely unguessable. }
+
+  str "conf." + <ServerType> + ".service" { Label for services offered by this
+                                        server, to distinguish it from other
+                                        servers of the same type.  This will be
+                                        concatenated to the service names that
+                                        this server will be registering with
+                                        the Broker (which vary depending on
+                                        what type of server this server is).
+                                        Default is the empty string, i.e., no
+                                        label. }
+
+    Note: these are the service names used by the current family of servers:
+
+      broker/admin       Broker administrative port
+      broker/client      Broker client port (to request service info about
+                         other servers or to register your own service info for
+                         others to see)
+      context/user       Context Server user port (for client connections)
+      director/admin     Director administrative port
+      director/provider  Director provider port (for providers being managed)
+      director/user      Director user port (for requesting reservations)
+      gatekeeper/admin   Gatekeeper administrative port
+      gatekeeper/user    Gatekeeper user port (to request reservations)
+      rep/admin          Repository administrative port
+      rep/rep            Repository object database services port
+
+  str "conf." + <ServerType> + ".name" { Name for this server, to be used in
+                                        log reports by Broker and Directors. }
+  where:
+    <ServerType> varies depending on what type of server you are setting the
+    above two properties for:
+      "broker"     = Broker
+      "context"    = Context Server
+      "director"   = Director
+      "gatekeeper" = Gatekeeper
+      "repository" = Repository
+
+  -- "conf.broker" + <HostSpec>     { Host info indicating what Broker to
+                                      connect to. If not specified, no Broker
+                                      will be used. }
+
+  -- "conf.listen" + <N> + <ListenSpec> { Info configuring the <N>th listener
+                                        port for this server. <N> should follow
+                                        a strict sequence, starting with the
+                                        null string and the incrementing from 1
+                                        (with no gaps) for each successive
+                                        listener configured. }
+  where:
+    <ListenSpec>: { A family of properties that configure a listener port. }
+      str ".host"      { Host name and optional colon-separated port number
+                         that the server should listen for connections on. If
+                         no port number is specified, an arbitrary, operating
+                         system assigned port will be used. }
+      str ".bind"      { Host name and optional colon-separated port number to
+                         actually bind the listener to, if this is different
+                         from the ".host" property (necessary sometimes due to
+                         firewalls and NAT). }
+      str ".protocol"  { Protocol to expect connecting clients to use.  Valid
+                         values are "tcp" (the default) or "http". }
+      --- <AuthSpec>   { Optional authorization information to require
+                         connecting clients to use. }
+      str ".allow"     { A comma-separated list of the kinds of connections
+                         that are allowed on this port. Valid values depend on
+                         what sort of server this is:
+                           Broker: "client" or "admin"
+                           Gatekeeper: "user" or "admin"
+                           Repository: "rep" or "admin"
+                           Director: "user", "provider" or "admin"
+                         In all cases, the value "any" is also valid and
+                         indicates that any sort of connection is allowed.  The
+                         default is that no types of connections are allowed,
+                         which is almost certainly not what you want.  Also,
+                         these ".allow" settings do not pertain to the Context
+                         Server, which only accepts one sort of connection. }
+      flg ".secure"    { If true, listen for an SSL connection on this
+                         port. Defaults to false. }
+      flg ".dontlog"   { If true, don't include message traffic to and from
+                         connections made to this port, even if message logging
+                         is turned on in general. }
+      str ".root"      { URL root for HTTP tunneling. }
+      str ".domain"    { Domain setting to be used on http connections to
+                         bypass browser 'same site' restrictions. }
+
+
+Trace control properties (used everywhere):
+  str "tracelog_dir"          { Directory in which log files will go. Defaults
+                                to the current working directory. }
+  str "tracelog_tag"          { Base string for synthesizing log file
+                                names. Defaults to "log". }
+  str "tracelog_name"         { Name of log file. Overrides "tracelog_dir" and
+                                "tracelog_tag". }
+  str "tracelog_size"         { Size, in bytes, after which the log file will
+                                be rolled over to a new file.  Defaults to
+                                500000; may not be set to lower than 1000.
+                                Alternatively, the value "unlimited" will
+                                inhibit log file rollover entirely.  Rolled
+                                over log files will be named by concatenating
+                                the tag string with a date string, unless
+                                "tracelog_name" has been set, in which case
+                                incrementing integers will be used instead. }
+  str "tracelog_backups"      { Sets the behavior with respect to log file
+                                rollover ('backups').  If set to "one" or "1",
+                                at most one rollover backup will be kept.  If
+                                set to "many" (the default), backups will
+                                simply accumulate. }
+  flg "tracelog_showverbose"  { Controls the verbosity of log file entries. If
+                                true, log entries will include the name of the
+                                trace subsystem generating the entry and the
+                                class name, method, and line number whence the
+                                entry is being requested.  Default is false. }
+
+  str "trace_" + <Subsystem>  { Sets the tracing level for a given
+                                subsystem. This is the level of severity
+                                necessary for a message to actually be written
+                                to the log file.  Valid values are: "ERROR",
+                                "WARNING", "USAGE", "WORLD", "EVENT", "DEBUG"
+                                and "VERBOSE", in increasing order of
+                                spamminess. }
+  where:
+    <Subsystem> is one of the currently recognized subsystems:
+      "comm"    = network communications subsystem
+      "msgs"    = JSON message handling subsystem
+      "runq"    = event run queue subsystem
+      "startup" = server initialization subsystem
+      "timers"  = timer events subsystem
+      "trace"   = trace subsystem
+      "brok"    = Broker application
+      "cont"    = Context Server application
+      "dire"    = Director application
+      "gate"    = Gatekeeper application
+      "repo"    = Repository application
+    Application Java code can also define new trace subsystems, which can
+    add to this list.  See the JavaDoc for the org.elkoserver.util.trace.Trace
+    class.
+
+
+Repository properties:
+  --- "conf.repository" + <LocalObjStoreSpec> { Configures the object store
+                                  implementation to be used by this
+                                  Repository. }
+
+
+Director properties:
+  int "conf.director.providerlimit"  { Sets the maximum number of providers
+                                       (e.g., Context Servers) that may
+                                       connect to this Director. }
+
+
+Gatekeeper properties:
+  --- "conf.gatekeeper.director" + <HostSpec> { Host info indicating what
+                                  Director to connect to. These properties
+                                  should be set if you are configuring the
+                                  Director connection manually (i.e., without
+                                  using a Broker). }
+  flg "conf.gatekeeper.director.auto" { If true, indicates that the Director to
+                                  connect to should be obtained automatically
+                                  from the Broker. }
+  int "conf.gatekeeper.actiontimeout" { Time, in seconds, after which user
+                                  connections will be terminated if they have
+                                  not done anything.  Default is 15 seconds. }
+  str "conf.gatekeeper.authorizer"    { Fully qualified class name of the Java
+                                  class implementing the
+                                  org.elkoserver.server.gatekeeper.Authorizer
+                                  interface. }
+  when "conf.gatekeeper.authorizer" is
+    org.elkoserver.server.gatekeeper.passwd.PasswdAuthorizer:
+   str "conf.gatekeeper.idbase"  { Base ID string for synthesized user IDs. }
+   flg "conf.gatekeeper.anonymous"  { If true, allow anonymous users to request
+                                  reservations. If false, don't. Defaults to
+                                  true. }
+   --- "conf.gatekeeper" + <ReposSpec> { Info describing the object store or
+                                  Repository to use for obtaining user
+                                  authentication and account information. }
+
+
+Context Server properties:
+  int "conf.context.reservationexpire" { Time, in seconds, before unredeemed
+                                       reservations are expired. Defaults to
+                                       30 seconds. }
+  int "conf.context.entrytimeout"    { Time, in seconds, that a new user
+                                       connection has to enter some context
+                                       before being kicked off for inactivity.
+                                       Defaults to 15 seconds. }
+  int "conf.context.userlimit"       { Maximum number of concurrent user
+                                       connections permitted on this server.
+                                       A value of 0 (the default) means no
+                                       limit. }
+  str "conf.context.shutdownpassword" { Password that must be given in a JSON
+                                       "shutdown" message to allow the server
+                                       to be shutdown.  Default is no
+                                       password. }
+  --- "conf.context" + <ReposSpec>   { Info describing the object store or
+                                       Repository to use for obtaining and
+                                       persisting contexts, items and users. }
+  --- "conf.register" + <N> + <HostSpec> { Host info indicating the <N>th
+                                       Director to register this Context Server
+                                       with. <N> should follow a strict
+                                       sequence, starting with the null string
+                                       and then incrementing from 1 (with no
+                                       gaps) for each successive Director
+                                       connection configured. These properties
+                                       should be set if you are configuring the
+                                       Director connections manually (i.e.,
+                                       without using a Broker). }
+  flg "conf.register.auto"           { If true, indicates that the Director(s)
+                                       to connect to should be obtained
+                                       automatically from the Broker. }

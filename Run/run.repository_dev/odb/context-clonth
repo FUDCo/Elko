@@ -1,0 +1,10 @@
+{
+  ref:"context-clonth",
+  type:"context",
+  name:"Cloneable Lancre",
+  capacity:10,
+  basecapacity:2,
+  mods:[{ type:"chat" }],
+  ref$contents:["item-thneed", "item-dict", "item-pdict"]
+}
+

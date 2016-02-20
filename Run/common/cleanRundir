@@ -1,0 +1,10 @@
+#!/bin/bash
+
+rm -f broker.runparams
+rm -f runcmd.*
+rm -f broker.startmode
+rm -f modules.properties
+rm -f uploads/*
+rm -f localmodules/*.jar
+rm -f control/*
+rm -f logs/*

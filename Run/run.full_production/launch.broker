@@ -1,0 +1,17 @@
+#!/bin/bash
+
+PORT_OPEN=${BROK_PORT_BASE}
+PORT_PSWD=$((${BROK_PORT_BASE} + 1))
+PORT_WEB=$((${BROK_PORT_BASE} + 2))
+
+echo ${HOST} ${PORT_PSWD} > broker.runparams
+
+if [ -f broker.startmode ]; then
+   START_MODE=`cat broker.startmode`
+else
+   START_MODE=initial
+fi
+echo "recover" > broker.startmode
+
+php ../manage/genlaunch.php runcmd.broker broker
+source runcmd.broker

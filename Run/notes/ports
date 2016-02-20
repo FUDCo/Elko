@@ -1,0 +1,23 @@
+port  prot  authmode     allow   what
+----  ----  -----------  ------  ---------------
+9000  tcp   open         user    Context Server
+9001  http  open         user    Context Server
+9002  tcp   reservation  user    Context Server
+9003  http  reservation  user    Context Server
+
+9010  tcp   open         user    alt Context Server
+9011  http  open         user    alt Context Server
+9012  tcp   reservation  user    alt Context Server
+9013  http  reservation  user    alt Context Server
+
+9050  tcp   open         any     Repository
+9051  tcp   password     admin   Repository
+
+9060  tcp   open         any     Director
+9061  tcp   password     admin   Director
+
+9070  tcp   open         any     Gatekeeper
+9071  tcp   password     admin   Gatekeeper
+
+9080  tcp   open         any     Broker
+9081  tcp   password     admin   Broker

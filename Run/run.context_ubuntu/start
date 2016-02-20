@@ -1,0 +1,57 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=ContextServer
+endif
+
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN_TCP  = ${CONT_PORT_BASE}
+@ PORT_OPEN_HTTP = ${CONT_PORT_BASE} + 1
+@ PORT_OPEN_RTCP = ${CONT_PORT_BASE} + 2
+
+@ DPORT = ${DIRE_PORT_BASE}
+@ BPORT = ${BROK_PORT_BASE}
+@ RPORT = ${REPO_PORT_BASE}
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_cont=WORLD \
+   trace_comm=WORLD \
+   tracelog_tag=logcont \
+   tracelog_dir=${TRACE_DIR} \
+   \
+   conf.comm.httptimeout=180 \
+   conf.comm.httpselectwait=30 \
+   conf.comm.rtcptimeout=300 \
+   conf.comm.rtcpdisconntimeout=60 \
+   conf.comm.rtcpbacklog=50000 \
+   conf.context.entrytimeout=300 \
+   conf.comm.jsonstrictness=true \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN_TCP} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN_TCP} \
+   conf.listen.protocol=tcp \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_OPEN_HTTP} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_OPEN_HTTP} \
+   conf.listen1.protocol=http \
+   conf.listen1.domain=${DOMAIN} \
+   conf.listen1.root=test \
+   \
+   conf.listen2.host=${SERVER_HOST}:${PORT_OPEN_RTCP} \
+   conf.listen2.bind=${SERVER_BIND}:${PORT_OPEN_RTCP} \
+   conf.listen2.protocol=rtcp \
+   \
+   \
+   conf.context.odb=mongo \
+   conf.context.odb.mongo.hostport=${MONGOHOST} \
+   conf.context.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+   conf.context.classdesc="classes-app" \
+   conf.context.shutdownpassword=figleaf \
+   conf.context.name=${SERVER_NAME} \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.context.ContextServerBoot \
+   $*

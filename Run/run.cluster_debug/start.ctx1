@@ -1,0 +1,99 @@
+#!/bin/csh
+
+set PORT_BASE=9100
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=ContextServerDebug
+endif
+
+if (! ${?LOG_TAG}) then
+   set LOG_TAG=cont1log
+endif
+
+#set SERVER_HOST=${HOST}.${DOMAIN}
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN_TCP  = ${CONT_PORT_BASE}
+@ PORT_OPEN_HTTP = ${CONT_PORT_BASE} + 1
+@ PORT_OPEN_RTCP = ${CONT_PORT_BASE} + 2
+@ PORT_RESV_TCP  = ${CONT_PORT_BASE} + 3
+@ PORT_RESV_HTTP = ${CONT_PORT_BASE} + 4
+@ PORT_RESV_RTCP = ${CONT_PORT_BASE} + 5
+@ PORT_INTERNAL  = ${CONT_PORT_BASE} + 6
+
+@ DPORT = ${DIRE_PORT_BASE} + 2
+@ BPORT = ${BROK_PORT_BASE}
+@ RPORT = ${REPO_PORT_BASE}
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_cont=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=${LOG_TAG} \
+   tracelog_dir=${TRACE_DIR} \
+   \
+#   conf.comm.httptimeout=3000 \
+   conf.comm.httptimeout=180 \
+#   conf.comm.httpselectwait=300 \
+   conf.comm.httpselectwait=30 \
+   conf.comm.rtcptimeout=300 \
+   conf.comm.rtcpdisconntimeout=60 \
+   conf.comm.rtcpbacklog=50000 \
+   conf.context.entrytimeout=300 \
+   conf.comm.jsonstrictness=true \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN_TCP} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN_TCP} \
+   conf.listen.protocol=tcp \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_OPEN_HTTP} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_OPEN_HTTP} \
+   conf.listen1.protocol=http \
+   conf.listen1.domain=${DOMAIN} \
+   conf.listen1.root=test \
+   \
+   conf.listen2.host=${SERVER_HOST}:${PORT_OPEN_RTCP} \
+   conf.listen2.bind=${SERVER_BIND}:${PORT_OPEN_RTCP} \
+   conf.listen2.protocol=rtcp \
+   \
+   conf.listen3.host=${SERVER_HOST}:${PORT_INTERNAL} \
+   conf.listen3.bind=${SERVER_BIND}:${PORT_INTERNAL} \
+   conf.listen3.protocol=tcp \
+   conf.listen3.allow=internal \
+   conf.listen3.auth.mode=password \
+   conf.listen3.auth.code=secret \
+   \
+   conf.listen4.host=${SERVER_HOST}:${PORT_RESV_TCP} \
+   conf.listen4.bind=${SERVER_BIND}:${PORT_RESV_TCP} \
+   conf.listen4.protocol=tcp \
+   conf.listen4.auth.mode=reservation \
+   \
+   conf.listen5.host=${SERVER_HOST}:${PORT_RESV_RTCP} \
+   conf.listen5.bind=${SERVER_BIND}:${PORT_RESV_RTCP} \
+   conf.listen5.protocol=rtcp \
+   conf.listen5.auth.mode=reservation \
+   \
+   conf.listen6.host=${SERVER_HOST}:${PORT_RESV_HTTP} \
+   conf.listen6.bind=${SERVER_BIND}:${PORT_RESV_HTTP} \
+   conf.listen6.protocol=http \
+   conf.listen6.domain=${DOMAIN} \
+   conf.listen6.root=test \
+   conf.listen6.auth.mode=reservation \
+   \
+#   conf.register.auto=true \
+   conf.register.host=${SERVER_HOST}:${DPORT} \
+   conf.load.time=300 \
+   conf.context.reservationexpire=300 \
+#   conf.broker.host=${SERVER_HOST}:${BPORT} \
+   \
+   conf.context.odb=mongo \
+   conf.context.odb.mongo.hostport=${MONGOHOST} \
+   conf.context.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+   conf.context.classdesc="classes-test" \
+   conf.context.shutdownpassword=figleaf \
+   conf.context.name=${SERVER_NAME} \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.context.ContextServerBoot \
+   $*

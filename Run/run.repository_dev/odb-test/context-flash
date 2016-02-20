@@ -1,0 +1,13 @@
+{
+  type:"context",
+  name:"Flash",
+  basecapacity:20,
+  capacity:30,
+  mods:[
+    { type:"chat" },
+    { type:"dictionary", 
+      persist:false 
+    }      
+  ]
+}
+

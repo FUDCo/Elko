@@ -1,0 +1,45 @@
+{
+  "type": "serverconfig",
+  "ref": "server-broker",
+  "name": "broker",
+  "component": "broker",
+  "bootclass": "org.elkoserver.server.broker.BrokerBoot",
+  "portbase": 9000,
+  "trace": {
+    "levels": { "brok": "EVENT", "comm": "EVENT" },
+    "dir": "./logs",
+    "rollover": "daily"
+  },
+  "shutdownpassword": "figleaf",
+  "msgdiagnostics": true,
+  "httptimeout": 180,
+  "httpselectwait": 30,
+  "listeners": [
+    { "host": "${HOST}",
+      "bind": "${BIND}",
+      "port": 0,
+      "protocol": "tcp",
+      "auth": { "mode": "open" },
+      "allow": "client"
+    },
+    { "host": "${HOST}",
+      "bind": "${BIND}",
+      "port": 1,
+      "protocol": "tcp",
+      "auth": { "mode": "password", "code": "figleaf" },
+      "allow": "any"
+    },
+    { "host": "${HOST}",
+      "bind": "${BIND}",
+      "port": 2,
+      "protocol": "http",
+      "domain": "${DOMAIN}",
+      "root": "admin",
+      "auth": { "mode": "password", "code": "figleaf" }
+    }
+  ],
+  "odb": {
+    "kind": "file",
+    "repodir": "odb"
+  }
+}

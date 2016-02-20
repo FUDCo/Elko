@@ -1,0 +1,8 @@
+#!/bin/bash
+MODULE=$1
+JAR=${MODULE}.jar
+
+rm -f localmodules/$JAR
+ln -s ../../../Distrib/Internal/$JAR localmodules/$JAR
+
+../common/refreshModuleProperties

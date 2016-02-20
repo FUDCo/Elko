@@ -1,0 +1,5 @@
+{type:"context",
+ capacity:10,
+ name:"Chat room #2",
+ mods:[{ type:"chat" }]
+}

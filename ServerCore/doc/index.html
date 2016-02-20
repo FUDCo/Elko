@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Documentation Index - Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko Server Framework</h1></div>
+</div>
+
+<div id="main">
+
+<h1>Documentation Index</h1>
+
+<p>The Elko server framework supports real-time stateful multiuser
+networked applications, such as multiplayer games, real-time auctions, or
+online messaging, all built around the Context-User-Item object model.  This
+page is a guide to the available documentation.
+
+<table cellspacing="5px">
+<tr valign="top"><td width="30%"><a href="ElkoTutorial.pdf">Elko Tutorial</a></td>
+<td>A programmer's walkthrough of the how to program server applications using
+Elko.</td>
+</tr>
+<tr valign="top"><td width="30%"><a href="cui.html">The Context-User-Item Object Model</a></td>
+<td>A detailed explanation of the object model that is the key organizing
+abstraction for applications built using Elko.</td>
+</tr>
+<tr valign="top"><td><a href="jmsg.html">JSON Messaging</a></td>
+<td>Our conventions for using JSON to represent messages from one machine or
+process to another, both in traffic between client &amp; server and in traffic
+among servers.</td>
+</tr>
+<tr valign="top"><td><a href="servercui.html">Server View of C-U-I</a></td>
+<td>A description of the important objects in the Context-User-Item object
+model, in terms of how they are realized on the Context Server.</td>
+</tr>
+<tr valign="top"><td><a href="clientcui.html">Client View of C-U-I</a></td>
+<td>A description of the important objects in the Context-User-Item object
+model, in terms of how they are seen by clients.</td>
+</tr>
+<tr valign="top"><td><a href="servermods.html">Server Mods Reference</a></td>
+<td><i>Mods</i> are the main abstraction you will use to extend the Context
+Server's functionality to implement your application.  However, in addition to
+programming new mods of your own, a variety of generally useful mods are
+already provided as part of the toolkit we distribute.  This document describes
+these in detail.</td>
+</tr>
+<tr valign="top"><td><a href="clientmods.html">Client Mods Reference</a></td>
+<td>The various mods that come bundled with the server each introduce new
+message protocols that expose these mods' functionality to clients.  These
+protocols are described here.</td>
+</tr>
+<tr valign="top"><td><a href="javadoc/index.html">Server Javadoc Pages</a></td>
+<td>Detailed documentation on the Java APIs for coding the server side of your
+application.</td>
+</tr>
+<tr valign="top"><td><a href="httpjmsg.html">HTTP Transport for JSON Messaging</a></td>
+<td>The protocol by which we efficiently synthesize a sessionful, symmetric,
+bidirectional, asynchronous message channel out of an ongoing series of
+transient, asymmetric, synchronous, RPC-style HTTP requests.</td>
+</tr>
+<tr valign="top"><td><a href="director.html">Director Server Protocols</a></td>
+<td>A reference guide to the various protocols by which Directors provide their
+services to Context Servers.</td>
+</tr>
+<tr valign="top"><td><a href="gatekeeper.html">Gatekeeper Server Protocols</a></td>
+<td>A reference guide o the various protocols by which Gatekeepers provide
+their services to Directors and Context Servers.</td>
+</tr>
+<tr valign="top"><td><a href="repository.html">Repository Server Protocols</a></td>
+<td>A reference guide to the various protocols by which Repositories provide
+their services to other servers.</td>
+</tr>
+<tr valign="top"><td><a href="presence.html">Presence Server Protocols</a></td>
+<td>A reference guide to the various protocols by which Presence Servers
+provide their services to Context Servers.</td>
+</tr>
+<tr valign="top"><td><a href="broker.html">Broker Server Protocols</a></td>
+<td>A reference guide to the various protocols by which Brokers enable the
+various different kinds of servers to locate each other, and by which a Broker
+can manage the operation of the overall constellation of servers.</td>
+</tr>
+<tr valign="top"><td><a href="serverconfig.html">Server Configuration Property Reference</a></td>
+<td>An excruciatingly detailed reference guide to all the various different
+Java property settings used to configure the various kinds of servers to do the
+things they do.</td>
+</tr>
+</table>
+
+</div>
+</div>
+</body>
+</html>

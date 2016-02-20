@@ -1,0 +1,2 @@
+{ ref:"context-priv", type:"context", name:"Sto Helit", capacity:10, semiprivate:true }
+

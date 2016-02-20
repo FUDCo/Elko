@@ -1,0 +1,41 @@
+{to:"session", op:"entercontext", context:"context-chat", user:"user-chip"}
+
+{to:"session", op:"entercontext", context:"context-chat", user:"user-harry"}
+
+
+{to:"session", op:"entercontext", context:"context-chat2", user:"user-chip",
+ sess:"bar"}
+ 
+String of doom:
+{to:"context-chat", op:"say", text:"â_¦"}
+
+{to:"context-chat", op:"say", text:"Hello world!"}
+
+{to:"context-chat2", op:"say", text:"Hello world (#2) !"}
+
+{to:"context-chat", op:"exit"}
+
+{to:"context-chat2", op:"exit"}
+
+
+{to:"session", op:"entercontext", context:"context-chat", user:"user-fred",
+ sess:"baz"}
+
+{to:"session", op:"entercontext", context:"context-chat2", user:"user-fred",
+ sess:"bletch"}
+
+{to:"context-chat", op:"say", text:"Another one speaks."}
+
+{to:"context-chat2", op:"say", text:"Another one speaks (#2)."}
+
+
+{to:"session", op:"entercontext", context:"context-th", user:"user-chip"}
+
+{to:"session", op:"exit"}
+
+{to:"session", op:"disconnect"}
+
+{to:"session", op:"ping", tag:"hello"}
+
+
+

@@ -1,0 +1,129 @@
+{op:"entercontext", to:"session", context:"ctx-badmod",
+    user:"u-alice", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-zmqsendtest",
+    user:"u-alice", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-testregion1",
+    user:"u-ugg", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-testregion1",
+    user:"u-alice", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-testregion1",
+    user:"u-bob", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-testregion1",
+    user:"u-derek", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-testregion2",
+    user:"u-noah", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-htentry",
+    user:"u-ugg", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-world",
+    user:"u-chip", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-world",
+    user:"u-rich", auth:"foo"}
+
+{op:"entercontext", to:"session", context:"ctx-world",
+    user:"u-vinny", auth:"foo"}
+
+java org.elkoserver.util.test.CryptoTest key 6sryanWrFUFTqdnkMDVhMg== \
+   nonce 300 Anon
+
+{op:"entercontext", to:"session", context:"context-chat",
+    utag:"testuserfactory", uparam:{blob:
+"+B3ETAMylYzMTacFzUh57wQUZuX++GvUGdJh10D19goxu5WQYN1HcYIeX6sND/D+5HPx0S3XG6Yl
+YLjQbY0ACftArq7KnB8xW8sgqDpoJlasHIjHCSqQxtdL7iEYjmMuMZwEa5m/7hD4eUiRE1hDJy"}}
+
+
+{op:"scan", to:"ctx-world", lat:37.4269, lon:-122.1258, range:500, angle:0,
+    bearing:223.1391}
+
+{op:"drop", to:"ctx-world", lat:37.4287, lon:-122.1281, label:"fnord"}
+
+
+{op:"move", to:"ctx-world", lat:37.4250, lon:-122.1229}
+
+{op:"move", to:"ctx-world", lat:37.4250, lon:-122.1230}
+
+//minden
+{op:"move", to:"ctx-world", lat:38.9564, lon:-119.7677}
+
+{op:"move", to:"ctx-world", lat:37.4250123", lon:-122.12300115}
+
+
+{op:"shutdown", to:"session", password:"figleaf", kill:true}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat",
+    user:"u-min"}
+
+
+{to:"session", op:"entercontext", context:"context-chat", user:"u-min",
+    auth:
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-clon",
+    user:"user-chip"}
+
+
+{to:"session", op:"entercontext", context:"context-clon", user:"user-chip",
+    auth:
+
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat",
+    user:"u-min"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat2",
+    user:"u-alice"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat3",
+    user:"u-bob"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat4",
+    user:"u-chip"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat5",
+    user:"u-vinny"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-chat6",
+    user:"u-randy"}
+
+
+
+{op:"entercontext", to:"session", context:"ctx-pusher1",
+    user:"u-vinny", auth:"foo"}
+

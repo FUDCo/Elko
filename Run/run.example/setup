@@ -1,0 +1,4 @@
+#!/bin/bash
+
+../common/cleanRundir
+../common/useModuleInternal example

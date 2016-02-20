@@ -1,0 +1,16 @@
+{
+    ref: "classes-zmq",
+    type: "classes",
+    classes: [
+        {
+            type: "class",
+            tag: "zmqoutbound",
+            name: "org.elkoserver.foundation.net.zmq.ZMQOutbound"
+        },
+        {
+            type: "class",
+            tag: "zmqsendmod",
+            name: "org.elkoserver.foundation.net.zmq.test.ZMQSendMod"
+        }
+    ]
+}

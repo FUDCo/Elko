@@ -1,0 +1,7 @@
+{
+  ref:"item-thneed",
+  type:"item",
+  deletable:true,
+  name:"Thneed"
+}
+

@@ -1,0 +1,9 @@
+DOMAIN=elkoserver.org
+
+LOCAL_JARS=../../ServerCore/built/bin/elkoserver.jar:${DISTI}/apptest.jar:${DISTI}/elkozmq.jar:${DISTE}/zmq.jar
+
+if [ ! ${CLASSPATH} ]; then
+  export CLASSPATH="${LOCAL_JARS}"
+else
+  export CLASSPATH="${LOCAL_JARS}:${CLASSPATH}"
+fi

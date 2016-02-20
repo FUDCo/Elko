@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Object Model</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Context-User-Item Object Model</h1>
+
+<p>The Elko Context Server supports applications build around the
+Context-User-Item object model.
+
+<p>A <em>Context</em> is a rendezvous and coordination point for communications
+among multiple parties.  A context is hosted on a <em>Context Server</em>.
+Within a context may be found users and items.
+
+<p>A <em>User</em> represents a human being sitting at a client application,
+typically implemented as Javascript code in a web browser.  At any given time,
+a user is in some context.  Multiple users may be in the same context together,
+enabling them to engage in multiparty interactions of various kinds.
+
+<p>An <em>Item</em> is an object that embodies some aspect of the application.
+An item is always in some <em>container</em>, which may be a context, a user,
+or another item.
+
+<p>Contexts, users and items are all examples of <em>unums</em>, world objects
+in a distributed instantiation object pattern.  Each of these objects has a
+representation, called a <em>presence</em>, that exists in the Context Server
+and in each of the clients.  Each unum has a <em>reference string</em> (or
+<em>ref</em> for short) by which it may be named in JSON messages.  When a
+client sends a message over a connection to a server and the server receives
+it, the message is delivered to the server presence of the object named by the
+message as its target.  Similarly, a server may send a message over a
+connection to a client, addressing the message to the client presence of some
+object.  Additionally, code running in the server may send a single message to
+all client presences of some object; the server message system will fan out
+that message to all the clients that hold presences of that object, using those
+clients' respective connections.  This will be explained in more detail in the
+section on server programming below.
+
+<p>Additional objects may exist only on the server or on some particular
+client.  These objects may be addressed as the targets of messages
+individually.  For example, when a client first connects to the server, the
+only server object that is immediately in scope for that client is the
+communications session itself, which may be addressed as
+<code>"session"</code>.  In particular, the client may send a message to the
+session object requesting that the client's associated user be granted
+admission to some particular context.
+
+<p>Most of the logic that is specific to particular applications is embodied in
+objects known as <em>Mods</em> (short, variously, for "module" or
+"modification", depending on your perspective).  A mod is simply a bundle of
+behavior and state that is attached to some particular context, user, or item.
+The mod augments the object to which it is attached with additional message
+protocols specific to whatever functionality it is that the mod provides.  Mods
+are most frequently attached to items, since the main thing that distiguishes
+one item from another (aside from its identity) is what mods it has that
+customize its behavior.
+
+</div>
+</div>
+</body>
+</html>

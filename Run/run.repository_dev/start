@@ -1,0 +1,43 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=Repository
+endif
+
+set SERVER_HOST=${HOST}.${DOMAIN}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN = ${REPO_PORT_BASE}
+@ PORT_PSWD = ${REPO_PORT_BASE} + 1
+
+@ BPORT = ${BROK_PORT_BASE}
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_repo=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=repolog \
+   conf.repository.service=contextdb \
+   conf.repository.name=${SERVER_NAME} \
+   conf.repository.odb=odb-test \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN} \
+#   conf.listen.host=${SERVER_HOST} \
+#   conf.listen.bind=${SERVER_BIND} \
+   conf.listen.protocol=tcp \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=any \
+   conf.listen1.host=${SERVER_HOST}:${PORT_PSWD} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_PSWD} \
+#   conf.listen1.host=${SERVER_HOST} \
+#   conf.listen1.bind=${SERVER_BIND} \
+   conf.listen1.protocol=tcp \
+   conf.listen1.auth.mode=password \
+   conf.listen1.auth.code=secret \
+   conf.listen1.allow=admin \
+   conf.broker.host=${SERVER_HOST}:${BPORT} \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.repository.RepositoryBoot \
+   $*
+

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Start all the component servers of the current cluster, but start one server
+# in particular in the Java debugger jdb.
+#
+# usage: debugStart.sh COMPONENTTODEBUG
+#
+# Execute with the CWD being the cluster's run directory.
+
+TARGET=$1
+
+source ../common/setenvvars
+
+TRACE_DIR=./logs
+COMPONENTS=launch.*
+
+for COMPONENT in $COMPONENTS; do
+    if [ $COMPONENT != launch.$TARGET ]; then
+        source $COMPONENT
+    fi
+done
+
+JAVA_RUN=jdb
+source launch.$TARGET

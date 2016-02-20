@@ -1,0 +1,36 @@
+{
+    ref: "classes-test",
+    type: "classes",
+    classes: [
+        {
+            type: "class",
+            tag: "internaltest",
+            name: "org.elkoserver.server.context.test.TestInternalObject"
+        },
+        {
+            type: "class",
+            tag: "testuserfactory",
+            name: "org.elkoserver.server.context.test.TestUserFactory"
+        },
+        {
+            type: "class",
+            tag: "zmqsendtest",
+            name: "org.elkoserver.server.context.test.ZMQSendTester"
+        },
+        {
+            type: "class",
+            tag: "die",
+            name: "org.elkoserver.server.context.test.Die"
+        },
+        {
+            type: "class",
+            tag: "counter",
+            name: "org.elkoserver.server.context.test.Counter"
+        },
+        {
+            type: "class",
+            tag: "gate",
+            name: "org.elkoserver.server.context.test.GateController"
+        }
+    ]
+}

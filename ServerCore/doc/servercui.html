@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Server Objects</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Server View of the Context-User-Item Model</h1>
+
+<p>The presences of C-U-I objects on the Context Server are authoritative with
+respect to the shared state of those objects.  In other words, when there are
+questions about the true state of reality, what the server says rules.  A
+client is authoritative only with respect two kinds of things: the user
+interface interpretation of those objects as presented to its own user, and the
+representation of the user's intentions to the server.
+
+<p>Furthermore, since a client in some context only communicates with the
+server for that context, the client only has to worry about managing a
+communications relationship with one other party.  The context's Context
+Server, in contrast, communicates with all the clients in that context, hence
+its model of the world is necessarily somewhat more complicated.
+
+<p>The persistent states of C-U-I objects are maintained by the server in its
+object database.  In the current implementation, these are stored as JSON
+object descriptors.  When there are no users in a context, the context sits in
+a quiescent state in the object database.  A quiescent context is only
+activated when a user enters it.  When the context is activated, the server
+loads its representation from the object database, instantiates a live context
+object for it, and then manages client interaction with it.  When the last
+client leaves the context, its persistent state is checkpointed back to the
+object database (though certain operations in a live context can also trigger
+such checkpointing during normal operation) and the context again becomes
+quiescent.  Actually, it is possible, if application requirements make it
+necessary, for a context to be made active absent any users within it, or to be
+kept active after all users have left, but this is not the normal mode of
+operation.
+
+<p>When a context is activated, not only is the context object loaded from the
+database, but so are any items that the context contains.  Furthermore, users
+themselves (and the items the contain) may have persistent representations
+that are also loaded upon entry.
+
+<p>An object's descriptor in the database includes descriptors for any mods
+that may be attached to that object.  Developing an application consists of
+defining the context, its mods, its items, and its items' mods.  A context or
+item may also define what we call <em>user mods</em>, which are temporary mods
+that are attached to a user or to one of the user's items when the user enters
+the context, then discarded again when the user leaves.
+
+<p>The Context Server provides a standard library of mods that can be
+recombined in different ways to produce different applications.  In addition,
+it is possible to program new server-side mod classes using a standard Java
+API.  As long as the mod classes are loadable from the server's configured
+class path, they may be used just like any of the built in mods.  (In the
+fullness of time we hope to enable server mods to be implemented in Javascript,
+so that application developers can develop both the client and server portions
+of their applications in a common language framework.  This will be coupled
+with a modular packaging scheme enabling developers to generate a single
+deployment package for an application that can be uploaded to the server and
+installed.)
+
+<p>When a server creates a new context, by convention it assigns it a ref of
+the form <code>"context.<i>uniq</i>_<i>id</i>"</code>, where
+<code><i>uniq</i></code> is unique token generated at server startup time, so
+that multipe servers sharing a common object database can generate unique
+identifiers without collisions, and <code>id</code> is a sequential integer
+number that increments with each context created.  It is not required that
+manually created contexts follow this convention, though it is useful for
+documentary purposes to follow a similar convention by identifying contexts
+with refs of the form <code>"context.<i>tag</i>"</code>, where
+<code><i>tag</i></code> is a mnemonic string of some kind.  Similary, items are
+given refs of the form <code>"item.<i>uniq</i>_<i>id</i>"</code> and users are
+given refs of the form <code>"user.<i>uniq</i>_<i>id</i>"</code>.
+
+<p>Clones, when they are created, are assigned refs by suffixing
+<code>".<i>cloneid</i>"</code> to the base ref of the master object from which
+they are cloned, where <code><i>cloneid</i></code> is a unique number issued by
+the server.  Note however, that while a non-clone object's ref is a permanent
+attribute of that object, clone refs are as ephemeral as the clone objects they
+refer to.
+
+
+<h2>The Context Object</h2>
+
+<p>Contexts are stored in the object database indexed by their reference
+strings.  A context is described by a JSON descriptor of the form:<p>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"context",<br>
+        name:<i>STR</i>,<br>
+        capacity:<i>INT</i>,<br>
+        baseCapacity:<i>?INT</i>,<br>
+        semiprivate:<i>?BOOL</i>,<br>
+        restricted:<i>?BOOL</i>,<br>
+        mods:[<i>MODDESC</i>],<br>
+        usermods:[<i>MODDESC</i>],<br>
+        contents:[<i>ITEMREF_STR</i>]
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>name</code> is the context's printable name, which may be significant
+in the application user interface.</li>
+
+<li><code>capacity</code> is the maximum number of users permitted in the
+context at any one time.  A value of -1 indicates that this is unlimited.</li>
+
+<li><code>baseCapacity</code>, if given, establishes the capacity of the
+context above which additional users attempting entry will trigger the creation
+of a clone. [Note: the context cloning feature is not yet fully
+implemented.]</li>
+
+<li><code>semiprivate</code> is a flag that, if given and true, indicates that
+this is what we call a semi-private context.  In a semi-private context, users
+are not informed of the presence of other users and may not interact with them
+directly.</li>
+
+<li><code>restricted</code> is a flag that, if given and true, indicates that
+entry to the context is access controlled.  A user attempting to enter a
+restricted context may only do so if they are carrying the proper entry key.
+This is explained in greater detail in the section on the ContextKey mod.</li>
+
+<li><code>mods</code>, if present, is an array of mods attached to the context.
+Each of these is a JSON object describing a particular mod.  The form of these
+mod descriptors varies depending on what kind of mods they are.  The current
+set of supported mods is described <a href="servermods.html">here</a>.</li>
+
+<li><code>usermods</code>, if present, is an array of mods that should be
+attached to users who enter the context.  As with the context's own mods, the
+form of these varies depending on mod type.  See the mod documentation for
+details.</li>
+
+<li><code>contents</code>, if present, is an array of item refs.  When the
+context is loaded from the object database, these items will also be loaded and
+inserted into the context's contents collection.</li>
+</ul>
+
+
+<h2>The Item Object</h2>
+
+<p>Items are stored in the object database indexed by their reference strings.
+An item is described by a JSON descriptor of the form:<p>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"item",<br>
+        name:<i>STR</i>,<br>
+        mods:[<i>MODDESC</i>],<br>
+        contents:[<i>ITEMREF_STR</i>],<br>
+        cont:<i>?BOOL</i>,<br>
+        deletable:<i>?BOOL</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>name</code> is the item's printable name.</li>
+
+<li><code>mods</code>, if present, is an array of mods attached to the item.
+Each of these is a JSON object describing a particular mod.  The form of these
+mod descriptors varies depending on what kind of mods they are.  The current
+set of supported mods is described <a href="servermods.html">here</a>.</li>
+
+<li><code>contents</code>, if present, is an array of item refs.  When the item
+is loaded from the object database, these items will also be loaded and
+inserted into the item's contents collection.</li>
+
+<li><code>cont</code> is a flag that, if present and true, indicates that the
+item may be used as a container (i.e., it may contain other items, even if it
+does not currently do so).</li>
+
+<li><code>deletable</code> is a flag that, if present and true, indicates that
+the item may be deleted by ordinary users by sending it a <code>"delete"</code>
+message.</li>
+</ul>
+
+
+<h2>The User Object</h2>
+
+<p>Users are stored in the object database indexed by their reference strings.
+An user is described by a JSON descriptor of the form:<p>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"user",<br>
+        name:<i>STR</i>,<br>
+        mods:[<i>MODDESC</i>],<br>
+        contents:[<i>ITEMREF_STR</i>]
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>name</code> is the user's printable name.</li>
+
+<li><code>mods</code>, if present, is an array of mods attached to the user.
+Each of these is a JSON object describing a particular mod.  The form of these
+mod descriptors varies depending on what kind of mods they are.  The current
+set of supported mods is described <a href="servermods.html">here</a>.</li>
+
+<li><code>contents</code>, if present, is an array of item refs.  When the user
+is loaded from the object database, these items will also be loaded and
+inserted into the user's contents collection.</li>
+</ul>
+
+</div>
+</div>
+</body>
+</html>

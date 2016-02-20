@@ -1,0 +1,4 @@
+#!/bin/csh
+
+setenv SERVER_NAME ContextServer3
+source start.context1

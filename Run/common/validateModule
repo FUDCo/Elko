@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Validate an uploaded module JAR file.
+#
+# usage: validateModule.sh JARPATH
+#
+# Prints "ok" to stdout if validation passes.
+
+# This is currently a placeholder that indiscriminately approves everything.
+echo ok

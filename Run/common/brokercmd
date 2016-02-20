@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Connect to a broker and execute a request.  JSON result will go to
+# stdout.
+#
+# usage: brokercmd COMMAND BROKERHOST ADMINPORT [ARGS...]
+#
+# where COMMAND is one of:
+#    ping          -- to ping the broker
+#    load          -- issue a loaddesc request
+#    services      -- issue a servicedesc request
+#    stopall       -- shutdown the cluster
+#    stopself      -- shutdown the broker
+#    startcontext  -- start the context server
+#    stopcontext   -- shutdown the context server
+#    stopcomponent -- shutdown a specific component server
+
+BROKERHOST=$2
+ADMINPORT=$3
+PW=figleaf
+
+NCCMD="nc -i 1 $BROKERHOST $ADMINPORT"
+
+ping() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"ping"}
+
+END_OF_SCRIPT
+}
+
+load() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"loaddesc"}
+
+END_OF_SCRIPT
+}
+
+services() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"servicedesc"}
+
+END_OF_SCRIPT
+}
+
+stopself() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"shutdown", self:true}
+
+END_OF_SCRIPT
+}
+
+startcontext() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"launch", name:"context"}
+
+END_OF_SCRIPT
+}
+
+startcomponent() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"launch", name:"$COMPONENT"}
+
+END_OF_SCRIPT
+}
+
+stopcontext() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"shutdown", server:"context"}
+
+END_OF_SCRIPT
+}
+
+stopcomponent() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"shutdown", server:"$COMPONENT"}
+
+END_OF_SCRIPT
+}
+
+stopall() {
+$NCCMD <<END_OF_SCRIPT
+{to:"admin", op:"auth", auth:{mode:"password", code:"$PW"}}
+
+{to:"admin", op:"shutdown", server:"all", self:false}
+
+END_OF_SCRIPT
+sleep 2
+stopself
+}
+
+case "$1" in
+  ping)
+    ping
+    ;;
+  load)
+    load
+    ;;
+  services)
+    services
+    ;;
+  stopall)
+    stopall
+    ;;
+  stopself)
+    stopself
+    ;;
+  startcontext)
+    startcontext
+    ;;
+  startcomponent)
+    COMPONENT=$4
+    startcomponent
+    ;;
+  stopcontext)
+    stopcontext
+    ;;
+  stopcomponent)
+    COMPONENT=$4
+    stopcomponent
+    ;;
+  *)
+    echo "Usage: brokercmd {ping|load|services|stopall|stopself|startcontext|stopcontext} BROKERHOST ADMINPORT"
+    exit 1
+esac

@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: JSON Messaging</h1></div>
+</div>
+
+<div id="main">
+
+<h1>JSON Messaging</h1>
+
+<p>Communications between the client and the Context Server, as well as between
+the Context Server and various ancillary servers that work in cooperation with
+it, is via <em>JSON Messaging</em>.
+
+<p>JSON Messaging is a set of conventions for encoding object-to-object
+messages using JSON.  A <em>JSON Message</em> is simply a JSON object of the
+form:<p>
+
+<div class="indent"><code>
+    { to:<i>TARGETREF</i>, op:<i>VERB</i>, <i>params...</i> }
+</code></div>
+
+<p>The property <code>"to"</code> designates the message target, i.e., the
+object to which the message is addressed.  Its value is a <em>Reference
+String</em>, or <em>Ref</em> for short, a string that uniquely names the target
+object in the scope of the messaging system on the arriving end of the
+communication.
+
+<p>The property <code>"op"</code> is the message verb, i.e., the operation code
+or method selector, a string that indicates to the message target what
+operation is to be performed upon receipt of the message.
+
+<p>Any number of other properties may also be included, and serve as named
+parameters.  Their number, names, and meanings vary depending on the specific
+message being sent.  They may be of any data type supported by JSON, as long as
+it is consistent with the mutual understanding by the sender and receiver of
+the proper content for the message.
+
+<p>For example, the message:<p>
+
+<div class="indent"><code>
+    { to:"user.47.3699102", op:"say", text:"Hello world!" }
+</code></div>
+
+<p>might be a chat message directed to another user.
+
+<p>JSON messages may be transmitted over any reasonable communications medium,
+as well as possibly some unreasonable ones.  The current implementation
+supports TCP and HTTP.  HTTP is used for communication between servers on the
+one hand and Javascript client software running in web browsers on the other.
+TCP is used for communication among servers, for delivery of server-side
+administrative commands under control of dedicated software designed for such
+purposes, and for manual testing using a TCP-based text communications utility
+such as Telnet.
+
+<p>A message connection is always a bidirectional, multiplexed,
+machine-to-machine (or process-to-process) message pipe.  Two communicating
+machines, whether they are a client and a server or a server and another
+server, typically maintain a single connection between them, over which all
+message traffic on behalf of objects on either side is carried.  A given
+connection is kept alive for the duration of the interaction between the two
+machines, until one side or the other decides to terminate it.  This
+communications session is stateful, in that either party is permitted, indeed
+expected, to maintain continuity of state between successive messages.  This is
+directly in contrast to stateless, sessionless protocols such as HTTP.
+
+<p>Though a connection is bidirectional, messaging over the connection is
+unidirectional and asynchronous.  That is, as soon as a running application
+passes a message to the messaging system, it is able to continue on its own
+without waiting for reply or confirmation.  When a message is part of a
+request-reply protocol, the reply must be treated as an explicit message by the
+two parties.  Any such protocol is part of the design of the particular
+application in question and is not the business of the messaging system itself.
+Any given message may result in a reply from its recipient, no reply, or
+possibly even many replies, depending on the design of the application and its
+protocols.
+
+<p>Messages on a connection are ordered, in the sense that a sequence of
+messages transmitted over a given connection from machine A to machine B will
+be received at machine B in the same order they were transmitted by machine A.
+However, this ordering is strictly on a per-connection basis.  If there is more
+than one connection between two machines (not normal but not forbidden either),
+there are no guarantees about the relative order of messages sent over
+different connections.
+
+<p>Since HTTP is stateless and sessionless, an additional transport protocol is
+used when the message transport medium is HTTP.  This protocol uses special
+URLs and additional JSON encoding within the HTTP request and reply bodies to
+efficiently synthesize a sessionful, symmetric, bidirectional, asynchronous
+message channel out of an ongoing series of transient, asymmetric, synchronous,
+RPC-style HTTP requests.  The details of this transport protocol are documented
+<a href="httpjmsg.html">here</a>.
+
+</div>
+</div>
+</body>
+</html>

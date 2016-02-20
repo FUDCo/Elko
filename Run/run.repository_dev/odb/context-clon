@@ -1,0 +1,2 @@
+{ ref:"context-clon", type:"context", name:"Cloneable", capacity:10, basecapacity:2 }
+

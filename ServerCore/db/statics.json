@@ -1,0 +1,18 @@
+{
+    "ref": "statics",
+    "statics": [
+        {
+            "key": "deviceuserfactory",
+            "ref": "deviceuserfactory"
+        },
+        {
+            "key": "deviceeuserfactory",
+            "ref": "deviceeuserfactory"
+        },
+        {
+            "key": "bankclient",
+            "ref": "bankclient"
+        }
+    ],
+    "type": "statics"
+}

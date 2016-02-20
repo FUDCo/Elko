@@ -1,0 +1,73 @@
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"ctx-pusher1",
+    user:"u-alice"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"ctx-pusher2",
+    user:"u-bob"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"ctx-pusher1",
+    user:"u-chip"}
+
+
+
+{op:"entercontext", to:"session", context:"ctx-pusher1",
+    user:"u-vinny", auth:"foo"}
+
+
+
+{to:"session", op:"entercontext", context:"ctx-pusher1", user:"u-alice",
+    auth:
+
+
+{to:"session", op:"entercontext", context:"ctx-pusher2", user:"u-bob",
+    auth:
+
+
+
+{to:"session", op:"entercontext", context:"ctx-pusher1", user:"u-chip",
+    auth:
+
+
+{to:"session", op:"entercontext", context:"ctx-pusher2", user:"u-chip",
+    auth:
+
+
+{to:"auth", op:"createactor", id:"chip", iid:"u-chip", name:"Chip",
+ password:"swordfish"}
+
+{to:"admin", op:"auth"}
+
+{to:"admin", op:"auth", auth:{mode:"password", code:"figleaf"}}
+
+{to:"auth", op:"lookupactor", id:"chip"}
+
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-gate",
+    user:"user-chip"}
+
+
+{to:"director", op:"auth"}
+
+{to:"director", op:"reserve", protocol:"tcp", context:"context-gate",
+    user:"user-harry"}
+
+
+{to:"session", op:"entercontext", context:"context-gate", user:"user-chip",
+    auth:
+
+
+{to:"session", op:"entercontext", context:"context-gate", user:"user-harry",
+    auth:
+

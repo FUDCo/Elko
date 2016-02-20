@@ -1,0 +1,21 @@
+{ "type": "launchertable",
+  "ref": "launchertable",
+  "launchers": [
+     { "type": "launcher",
+       "name": "director",
+       "script": "../common/startComponent director",
+       "initial": true },
+     { "type": "launcher",
+       "name": "presence",
+       "script": "../common/startComponent presence",
+       "initial": true },
+     { "type": "launcher",
+       "name": "workshop",
+       "script": "../common/startComponent workshop",
+       "initial": true },
+     { "type": "launcher",
+       "name": "context",
+       "script": "../common/startComponent context",
+       "initial": true }
+  ]
+}

@@ -1,0 +1,6 @@
+#!/bin/csh
+
+setenv PORT_OFFSET 100
+setenv BROK_PORT_BASE 8080
+setenv SERVER_NAME ContextServer2
+./start.ctx1

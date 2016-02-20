@@ -1,0 +1,10 @@
+#!/bin/bash
+
+PORT_RESV_TCP=$((${CONT_PORT_BASE} + 0))
+PORT_RESV_HTTP=$((${CONT_PORT_BASE} + 1))
+PORT_RESV_RTCP=$((${CONT_PORT_BASE} + 2))
+
+BROKER_PORT=$((${BROK_PORT_BASE} + 1))
+
+php ../manage/genlaunch.php runcmd.context context
+source runcmd.context

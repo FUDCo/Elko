@@ -1,0 +1,67 @@
+<html>
+<head>
+</head>
+<body>
+<p>Utilities for working with JSON (JavaScript Object Notation) objects.</p>
+
+<p>The <b>JavaScript Object Notation</b>,or <b>JSON</b> (pronounced
+<i>JAY-son</i>), is a subset of JavaScript's object literal notation.
+JavaScript (aka ECMAScript) is defined in <a
+href="http://www.ecma.ch/ecma1/STAND/ECMA-262.HTM">ECMA Standard ECMA-262</a>.
+It is more expressive than XML, easier for humans to read and write, easier for
+machines to parse and manipulate, and produces much smaller payloads. There is
+a complete JSON parser built into every modern web browser. This syntax is also
+supported by Python, NewtonScript, and other languages.</p>
+
+<dl> 
+  <dl> 
+    <dt><i>object-literal</i> :</dt>
+    <dd><tt><b>{</b></tt> <i>property-list</i> <tt><b>}</b></tt> <br>
+      <tt><b>{}</b></tt></dd>
+    <dt><i>property-list</i> :</dt>
+    <dd><i>identifier</i> <tt><b>:</b></tt> <i>value</i> <br>
+      <i>string-literal</i> <tt><b>:</b></tt> <i>value</i> <br>
+      <i>property-list</i> <tt><b>,</b></tt> <i>string-literal</i> <tt><b></b></tt> 
+      <tt><b>:</b></tt> <i>value</i> </dd>
+    <dt><i>value</i> :</dt>
+    <dd><i>string-literal</i><br>
+      <i>numeric-literal</i><br>
+      <i>object-literal</i><br>
+      <i>array-literal</i><br>
+      <tt><b>true</b></tt><br>
+      <tt><b>false</b></tt><br>
+      <tt><b>null</b></tt></dd>
+    <dt><tt><b></b></tt></dt>
+    <dt><i>array-literal</i> :</dt>
+    <dd><tt><b>[</b></tt> <i>element-list</i> <tt><b>]</b></tt><br>
+      <tt><b>[]</b></tt></dd>
+    <dt><i>element-list</i> :</dt>
+    <dd><i>value</i> <br>
+      <i>element-list</i> <tt><b>,</b></tt> <i>value</i></dd>
+  </dl>
+</dl>
+
+<p>It is strictly illegal to put blank lines within a message, or to put a line
+terminating character inside a string literal.</p>
+
+<p>Strings can be contained within double quotes <tt>"..."</tt> or single
+quotes <tt>'...'</tt>. UTF-8 encoding is used. Escapement uses the <tt>'\'</tt>
+character.</p>
+
+<p>Numbers follow the C convention, except that octal notation is not
+permitted; a leading zero must be immediately followed by a decimal point or
+the letter <tt>x</tt>.</p>
+
+<p>Elko uses JSON as its inter-system message syntax.
+
+<p>By convention, a JSON object which represents an inter-system message will
+have two string-valued properties <tt>to:</tt> and <tt>op:</tt>, which
+respectively designate the message target (i.e., the object the which the
+message is being directed) and the message verb.  Similarly, a JSON object
+which represents a structure that is being transmitted as a message parameter
+or stored in an external persistent medium (e.g., a database) will have a
+string-valued property <tt>type:</tt> which denotes the kind of structure being
+represented.
+
+</body>
+</html>

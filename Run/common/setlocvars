@@ -1,0 +1,51 @@
+IGNORE=`which ec2metadata`
+if [ $? = 1 ]; then
+    KERNEL=`uname -v | cut -c 1-6`
+    if [ $KERNEL = joyent ]; then
+        HOSTER=joyent
+    elif [ $KERNEL = Darwin ]; then
+        HOSTER=osx
+    else
+        HOSTER=unknown
+    fi
+else
+    HOSTER=ec2
+fi
+
+case "$HOSTER" in
+    ec2)
+        HOST=`ec2metadata --public-hostname`
+        BIND=`uname --nodename`
+        ;;
+    joyent)
+        HOST=`ifconfig net0 | grep -w inet | awk '{print $2}'`
+        ;;
+    osx)
+        HOST=`ifconfig en0 | grep -w inet | awk '{print $2}'`
+        ;;
+    unknown)
+        HOST=elkoserver.org
+        ;;
+esac
+    
+
+DOMAIN=elkoserver.org
+
+TRACE_DIR=./logs
+
+LOCAL_JARS=
+
+if [ ! ${CLASSPATH} ]; then
+    export CLASSPATH="${LOCAL_JARS}"
+else
+    export CLASSPATH="${LOCAL_JARS}${DELIM}${CLASSPATH}"
+fi
+
+if [ -f ../common/setlocvars.${USER} ]; then
+    source ../common/setlocvars.${USER}
+fi
+
+if [ -f setlocvars.${USER} ]; then
+    source setlocvars.${USER}
+fi
+

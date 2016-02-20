@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Start one component server of the current cluster.
+#
+# usage: startComponent COMPONENT
+#
+# Execute with the CWD being the cluster's run directory.
+
+echo "startComponent $1 invoked"
+if [ -e launch.$1 ]; then
+   source ../common/setenvvars
+
+   TRACE_DIR=./logs
+
+   echo "startComponent $1 invoking launch script"
+   source launch.$1
+   echo "startComponent $1 invoked launch script"
+else
+   echo "No component $1 found."
+fi
+echo "startComponent $1 done"

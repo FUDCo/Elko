@@ -1,0 +1,130 @@
+<html>
+<head>
+    <title>Chat Tester</title>
+
+</head>
+    <body>
+        <fieldset><legend>Chat Tester</legend>
+        <input id="clear"      type="button" value="Clear">
+        <input id="login"      type="button" value="Login">
+        <input id="disconnect" type="button" value="Disconnect">
+        <input id="speak"      type="button" value="Speak">
+        <input id="showparam"  type="button" value="Prefs" onclick="x=document.getElementById('parameters'); x.hidden = !x.hidden;">
+        <div id="parameters">
+          Server: <input type="text" id="root" style="{font: mono;width: 200;}" value="http://127.0.0.1:9001/brawl" />
+                  <input type="checkbox" id="useDir"><small>dir?</small>
+          Context:<input type="text" id="context" style="{font: mono; width: 60;}" value="context-brawl12" />
+          User:   <input type="text" id="userid" style="{font: mono; width: 100;}" value="u-don_55" />
+        </div>
+        <textarea id="input" style="{width: 90%; height: 3in; font: mono; overflow: auto; margin: 10pt;}"></textarea>
+        <div id="log" style="border: 1px solid black; padding: 1em;"> </div></fieldset>
+        <script src="http://us.js2.yimg.com/us.js.yimg.com/lib/common/utils/2/yahoo_2.0.6.js"></script>
+        <script src="http://us.js2.yimg.com/us.js.yimg.com/lib/common/utils/2/event_2.0.6.js"></script>
+
+        <script src="http://code.jquery.com/jquery-1.6.1.js"></script>
+
+        <script src="json.js"></script>
+        <script src="trace.js"></script>
+        <script src="connectionjq.js"></script>
+        <script src="session.js"></script>
+        <script>
+
+String.prototype.entityify = function () {
+    return this.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+};
+
+document.getElementById('parameters').hidden = true;
+
+(function () {
+    try {
+        function pushLog(text) {
+            log.innerHTML = '<p>' + text + '<\/p>' + log.innerHTML;
+        }
+
+        var log     = document.getElementById('log');
+        var root    = document.getElementById('root').value;
+        var ctxname = document.getElementById('context').value;
+        var useDir  = document.getElementById('useDir').checked;
+        var yue = YAHOO.util.Event;
+        var contextReady = false;
+        var users = [];
+
+        var session = ELKO.session();
+        var ctxType = session.getType('context');
+        ctxType.prototype.op_say = function(msg) {
+            var user = users[msg.from];
+            pushLog(user.name + ': ' + msg.text);
+        };
+        ctxType.prototype.op_ready = function(msg) {
+            contextReady = true;
+        };
+        ctxType.prototype.onMake = function() {
+            pushLog("Welcome to " + this.name);
+        };
+        var userType = session.getType('user');
+        userType.prototype.op_say = function(msg) {
+            var user = users[msg.from];
+            pushLog('<i>' + user.name + ': ' + msg.text + '<\/i>');
+        };
+        userType.prototype.onMake = function() {
+            var stateLabel = contextReady ? 'has arrived' : 'is here';
+            pushLog(this.name + ' ' + stateLabel + '.');
+            users[this.ref] = this;
+        };
+        userType.prototype.onDelete = function() {
+            pushLog(this.name + ' has left.');
+        };
+        session.addType({type: 'die', prototype:{
+            onMake: function() {
+                pushLog('A ' + this.object.name + ' is here.');
+            },
+            op_roll: function(msg) {
+                var roller = users[msg.from];
+                pushLog(roller.name + ' rolls the ' + this.object.name +
+                        ', gets a ' + msg.value + '.');
+            }
+        }});
+
+        yue.addListener('clear', 'click',
+                        function (e) { log.innerHTML = ''; });
+        yue.addListener('disconnect', 'click',
+                        function (e) {
+                            session.disconnect();
+                            pushLog("------ Disconnected ------");
+                        });
+        yue.addListener('login', 'click',
+            function (e) {
+                root = document.getElementById('root').value;
+                useDir = document.getElementById('useDir').checked;
+                ctxname = document.getElementById('context').value;
+                if (useDir) {
+                    session.connectToContextViaDirector(root, ctxname,
+                        {user:document.getElementById('userid').value});
+                } else {
+                    session.connectToContext(root, ctxname,
+                        {user:document.getElementById('userid').value});
+                }
+            });
+        yue.addListener('speak', 'click',
+            function (e) {
+                var text = document.getElementById('input').value;
+                if (text[0] == '{') {
+                    session.send(text);
+                } else {
+                    session.send({to:ctxname,
+                                  op:'say',
+                                  text:text});
+                }
+            });
+    } catch (e) {
+        var log = document.getElementById('log');
+        if (e && typeof e === 'object') {
+            e = JSON.stringify(e);
+        }
+        log.innerHTML = '<h3>' + e.entityify() + '<\/h3>' + log.innerHTML;
+    }
+}) ();
+
+        </script>
+    </body>
+</html>

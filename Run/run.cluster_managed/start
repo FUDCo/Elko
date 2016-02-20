@@ -1,0 +1,8 @@
+#!/bin/csh
+source start.broker &
+sleep 5
+source start.gatekeeper &
+sleep 5
+source start.director &
+sleep 5
+source start.context &

@@ -1,0 +1,7 @@
+#!/bin/csh
+
+set PORT_BASE=9100
+set PORT_OFFSET=20
+set SERVER_NAME=ContextServerDebug3
+set LOG_TAG=ctx3log
+source start.ctx1

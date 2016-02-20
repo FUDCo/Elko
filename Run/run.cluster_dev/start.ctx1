@@ -1,0 +1,61 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=ContextServer1
+endif
+
+#set SERVER_HOST=${HOST}.${DOMAIN}
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN_TCP  = ${CONT_PORT_BASE}
+@ PORT_OPEN_HTTP = ${CONT_PORT_BASE} + 1
+@ PORT_RESV_TCP  = ${CONT_PORT_BASE} + 2
+@ PORT_RESV_HTTP = ${CONT_PORT_BASE} + 3
+
+@ DPORT = ${DIRE_PORT_BASE}
+@ BPORT = ${BROK_PORT_BASE}
+@ RPORT = ${REPO_PORT_BASE}
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_cont=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=cont1log \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN_TCP} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN_TCP} \
+   conf.listen.protocol=tcp \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_OPEN_HTTP} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_OPEN_HTTP} \
+   conf.listen1.protocol=http \
+   conf.listen1.domain=${DOMAIN} \
+   conf.listen1.root=test \
+   \
+   conf.listen2.host=${SERVER_HOST}:${PORT_RESV_TCP} \
+   conf.listen2.bind=${SERVER_BIND}:${PORT_RESV_TCP} \
+   conf.listen2.protocol=tcp \
+   conf.listen2.auth.mode=reservation \
+   \
+   conf.listen3.host=${SERVER_HOST}:${PORT_RESV_HTTP} \
+   conf.listen3.bind=${SERVER_BIND}:${PORT_RESV_HTTP} \
+   conf.listen3.protocol=http \
+   conf.listen3.domain=${DOMAIN} \
+   conf.listen3.root=test \
+   conf.listen3.auth.mode=reservation \
+   \
+#   conf.register.auto=true \
+   conf.register.host=${SERVER_HOST}:${DPORT} \
+#   conf.broker.host=${SERVER_HOST}:${BPORT} \
+   \
+   conf.context.odb=odb-test \
+   conf.context.classdesc="classes-test,classes-app" \
+#   conf.context.repository.host=${SERVER_HOST}:${RPORT} \
+#   conf.context.repository.service=contextdb \
+#   conf.context.repository.dontlog=true \
+   conf.context.name=${SERVER_NAME} \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.context.ContextServerBoot \
+   $*

@@ -1,0 +1,7 @@
+#!/bin/csh -f
+/bin/rm -rf odb-test
+mkdir -p odb-test
+if (-d ../conf/odb) then
+    cp ../conf/odb/*.* ../conf/odb/classes odb-test
+endif
+cp odb/* odb-test

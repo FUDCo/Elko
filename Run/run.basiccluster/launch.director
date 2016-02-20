@@ -1,0 +1,10 @@
+#!/bin/bash
+
+PORT_CLIENT_TCP=${DIRE_PORT_BASE}
+PORT_CLIENT_RTCP=$((${DIRE_PORT_BASE} + 1))
+PORT_SERVER_TCP=$((${DIRE_PORT_BASE} + 2))
+
+BROKER_PORT=$((${BROK_PORT_BASE} + 1))
+
+php ../manage/genlaunch.php runcmd.director director
+source runcmd.director
