@@ -71,6 +71,9 @@ public abstract class ConnectionBase implements Connection {
      * @param message  The received message.
      */
     protected void enqueueReceivedMessage(Object message) {
+        if (myMessageHandler instanceof MessageAcquirer) {
+            ((MessageAcquirer) myMessageHandler).acquireMessage(message);
+        }
         myRunner.enqueue(new MessageHandlerThunk(message));
     }
 

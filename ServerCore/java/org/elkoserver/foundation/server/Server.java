@@ -160,7 +160,7 @@ public class Server implements ConnectionCountMonitor, ServiceFinder
             props.getProperty("conf." + serverType + ".name", "<anonymous>");
 
         trServer.noticei(version());
-        trServer.noticei("Copyright 2011 Chip Morningstar; see LICENSE");
+        trServer.noticei("Copyright 2016 ElkoServer.org; see LICENSE");
         trServer.noticei("Starting " + myServerName);
 
         myLoadMonitor = new ServerLoadMonitor(this);
@@ -746,8 +746,8 @@ public class Server implements ConnectionCountMonitor, ServiceFinder
             try {
                 listenAddress =
                     myNetworkManager.listenVia(
-                        propRoot,
                         mgrClass,
+                        propRoot,
                         bind,
                         actorFactory,
                         msgTrace,

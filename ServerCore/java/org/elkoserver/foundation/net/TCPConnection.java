@@ -176,6 +176,13 @@ public class TCPConnection
         if (myTrace.event && Trace.ON) {
             myTrace.eventi(this + " died: " + reason);
         }
+        Object message = myOutputQueue.optDequeue();
+        while (message != null) {
+            if (message instanceof Releasable) {
+                ((Releasable) message).release();
+            }
+            message = myOutputQueue.optDequeue();
+        }
         connectionDied(reason);
     }
 
@@ -246,6 +253,9 @@ public class TCPConnection
                 } else if (message != null) {
                     myOutputBuffer =
                         ByteBuffer.wrap(myFramer.produceBytes(message));
+                    if (message instanceof Releasable) {
+                        ((Releasable) message).release();
+                    }
                 }
             }
             if (myOutputBuffer != null) {
@@ -303,6 +313,45 @@ public class TCPConnection
             if (doWakeup) {
                 mySelectThread.readyToSend(this);
             }
+        } else {
+            if (message instanceof Releasable) {
+                ((Releasable) message).release();
+            }
+        }
+    }
+
+    /**
+     * Test if this connection is available for writes.
+     *
+     * The idea here is to get an approximate sense, when arbitrating among a
+     * series of alternate possible connections to transmit something over.  Do
+     * not do anything that depends for its correctness on the answer returned
+     * by this method being accurate.
+     *
+     * @return true if this connection appears to be writable, false if not.
+     */
+    public boolean isWritable() {
+        try {
+            return
+                amOpen &&
+                !myOutputQueue.hasMoreElements() &&
+                (myOutputBuffer == null || !myOutputBuffer.hasRemaining());
+        } catch (NullPointerException e) {
+            /* We are looking at myOutputBuffer from outside the thread that is
+               actually entitled to be looking at it, so it is possible that
+               the variable will be non-null when we test it for null and then
+               null a moment later when we try to invoke hasRemaining() on
+               it. Since the purpose of this method is only to give an
+               approximate take on the writabilty of the connection, we can
+               declare that if this NPE happens then the buffer is now null and
+               hence writable.  We could be more disciplined about locking and
+               such, but it would be huge increase in thread madness with no
+               particular benefit gained as a consequence.  So this little bit
+               of meatball hackery seems like it's actually the least dumb
+               thing to do here (aside from arranging to not want to ask the
+               "is it writable?"  question in the first place, of course; but
+               that would be even more work.) */
+            return true;
         }
     }
 

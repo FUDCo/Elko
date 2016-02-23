@@ -23,7 +23,7 @@ JFLAGS = -g -Xlint:unchecked
 
 BUILD_DATE ?= $(shell date '+%e-%b-%Y %T %Z')
 BUILD_NAME ?= Release build
-VERSION_NAME ?= Elko 1.0
+VERSION_NAME ?= Elko 2.0.1
 
 VERSION_STRING ?= $(VERSION_NAME) $(BUILD_NAME) $(BUILD_DATE)
 
@@ -69,7 +69,7 @@ else
 endif
 
 # External .jar files
-EXT_JARS = $(EXT_IMPORT_DIR)/mongo.jar$(D)$(EXT_IMPORT_DIR)/ScalableSSL.jar$(D)$(EXT_IMPORT_DIR)/commons-codec.jar$(D)$(INT_IMPORT_DIR)/fakessl.jar
+EXT_JARS = $(EXT_IMPORT_DIR)/mongo.jar$(D)$(EXT_IMPORT_DIR)/ScalableSSL.jar$(D)$(EXT_IMPORT_DIR)/commons-codec.jar$
 
 ifeq ($(CLASSPATH),)
     CLASSPATH = $(CLA_DIR)$(D)$(EXT_JARS)
@@ -84,8 +84,8 @@ VERSION_PACKAGE_SRC_DIR = $(JAV_DIR)/$(CLA_ROOT)/foundation/server
 
 VERSION_DECL = $(VERSION_PACKAGE_SRC_DIR)/BuildVersion.java
 
-ALL_JSRC = $(shell cd $(JAV_DIR); find org -name '[^_]*.java')
-ALL_TSRC = $(shell cd $(JAV_DIR); find org -name '*.java.tmpl')
+ALL_JSRC = $(shell cd $(JAV_DIR); find org scalablessl -name '[^_]*.java')
+ALL_TSRC = $(shell cd $(JAV_DIR); find org scalablessl -name '*.java.tmpl')
 ALL_JAV = $(ALL_JSRC:%.java=$(JAV_DIR)/%.java)
 ALL_CLA = $(ALL_JSRC:%.java=$(CLA_DIR)/%.class) $(ALL_TSRC:%.java.tmpl=$(CLA_DIR)/%.class) 
 ALL_DEP = $(ALL_JSRC:%.java=$(DEP_DIR)/%.d) $(ALL_TSRC:%.java.tmpl=$(DEP_DIR)/%.d)
@@ -209,7 +209,8 @@ $(JAR_DIR)/elkoserver.jar: $(CLASS_BUILD_MARKER)
 	    `find $(CLA_ROOT)/json -name '*.class'` \
 	    `find $(CLA_ROOT)/objdb -name '*.class'` \
 	    `find $(CLA_ROOT)/server -name '*.class'` \
-	    `find $(CLA_ROOT)/util -name '*.class'`
+	    `find $(CLA_ROOT)/util -name '*.class'` \
+	    `find scalablessl -name '*.class'`
 
 do-javadoc: generated
 	rm -rf $(JAVADOC_DIR)/*
@@ -227,7 +228,7 @@ do-javadoc: generated
 
 $(CLASS_BUILD_MARKER): $(ALL_CLA)
 	$(JAVAC) $(JFLAGS) -d $(CLA_DIR) -classpath "$(CLASSPATH)" $(?:$(CLA_DIR)/%.class=$(JAV_DIR)/%.java)
-	jdep -i org.elkoserver -c $(CLA_DIR) -j $(JAV_DIR) -d $(DEP_DIR) $?
+	jdep -i org.elkoserver -i scalablessl -c $(CLA_DIR) -j $(JAV_DIR) -d $(DEP_DIR) $?
 	touch $@
 
 base-build: generated $(JAR_FILES)

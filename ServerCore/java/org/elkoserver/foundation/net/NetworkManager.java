@@ -362,7 +362,7 @@ public class NetworkManager {
      *
      * @return the properties
      */
-    BootProperties props() {
+    public BootProperties props() {
         return myProps;
     }
 

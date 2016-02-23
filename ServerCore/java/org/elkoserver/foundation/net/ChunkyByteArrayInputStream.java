@@ -207,7 +207,27 @@ public class ChunkyByteArrayInputStream extends InputStream {
         if (testEnd()) {
             return -1;
         } else {
-            return readByte();
+            return readByteInternal();
+        }
+    }
+
+    /**
+     * Read the next raw byte of data from the input stream.  The byte value is
+     * returned as an int in the range 0 to 255.  If no byte is available, the
+     * value -1 is returned.  This method assumes that the byte is intended to
+     * be used as a raw value, not as part of a potentially multi-byte
+     * character.
+     *
+     * @return the next byte of data, or -1 if the end of the currently
+     *    available input is reached.
+     *
+     * @throws IOException if the true end of input is reached normally
+     */
+    public int readByte() throws IOException {
+        if (myTotalByteCount < 1) {
+            return -1;
+        } else {
+            return readByteInternal() & 0xFF;
         }
     }
 
@@ -218,7 +238,7 @@ public class ChunkyByteArrayInputStream extends InputStream {
      *
      * @return the next byte of data.
      */
-    private int readByte() throws IOException {
+    private int readByteInternal() throws IOException {
         if (myWorkingBuffer == null) {
             if (myPendingBuffers.size() > 0) {
                 myWorkingBuffer = myPendingBuffers.removeFirst();
@@ -263,7 +283,7 @@ public class ChunkyByteArrayInputStream extends InputStream {
         } else {
             byte[] result = new byte[count];
             for (int i = 0; i < count; ++i) {
-                result[i] = (byte) readByte();
+                result[i] = (byte) readByteInternal();
             }
             return result;
         }
