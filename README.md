@@ -49,21 +49,21 @@ Again)](http://habitatchronicles.com/2009/09/elko-ii-against-statelessness-or-ev
 * [Part III: Scale
 Differently](http://habitatchronicles.com/2009/09/elko-iii-scale-differently/)
 
-Elko is open source software, under the MIT license.  See the file LICENSE.md
+Elko is open source software, under the MIT license.  See the file `LICENSE.md`
 
 ## What's Here
 
-* ServerCore -- contains the Elko server framework itself, along with its
+* `ServerCore` -- contains the Elko server framework itself, along with its
   documentation.
 
-* Web -- contains client side JavaScript and HTML for interacting with Elko
+* `Web` -- contains client-side JavaScript and HTML for interacting with Elko
   applications from a web browser.
 
-* Run -- contains a variety of shell scripts for running and managing various
+* `Run` -- contains a variety of shell scripts for running and managing various
   server farm configurations, as well as the beginnings of a web-based
   adminstration console (written in PHP).
 
-* ZeroMQ -- contains a pluggable extension that lets Elko servers talk to
+* `ZeroMQ` -- contains a pluggable extension that lets Elko servers talk to
   things using the [ZeroMQ](http://zeromq.org) distributed messaging framework.
 
 #### Building
@@ -77,25 +77,34 @@ Note that most people doing Java development these days use one of the several
 popular Java IDEs and/or [Maven](https://maven.apache.org), but at the moment
 there's no support here for these; I'm an old time Unix/emacs guy and never had
 much use for such newfangled contraptions (especially Maven, yuck). However,
-the Java source tree is structured in the conventional way and the classes have
-few external dependencies outside the normal class libraries that are part of
-the standard JDK, so you should just be able to import the source tree into
-your favorite IDE and press the build button.
+the Java source tree is structured in the conventional way, so you should just
+be able to import the source tree into your favorite IDE and press the build
+button.
 
-Much more detail on building will be presented in an accompanying BUILD.md file
-when I get done writing it.
+The `ServerCore` classes have only two external dependencies outside the normal
+class libraries that are part of the standard JDK. These are the [MongoDB
+client libaries](https://docs.mongodb.org/ecosystem/drivers/java/), if want
+support for MongoDB-based object persistence (and which you can do without in a
+pinch, as it is not strictly necessary for all use cases) and the [Apache
+Commons Codec packages](https://commons.apache.org/proper/commons-codec/) (to
+replace the now deprecated Sun base-64 encoder and decoder that Java
+applications relied on for so long).
 
-All the Java code works on any standard, reasonably current JVM. The various
-shell scripts do assume a Unix shell environment, but Cygwin will suffice and
-they are not deeply essential anyway.
+More detail on building will be presented in an accompanying `BUILD.md` file
+once I get done writing it.
+
+All the Java code works on any standard, reasonably current JVM, as it does not
+make use of any language features newer than generic. The various shell scripts
+in the `Run` tree do assume a Unix shell environment, but Cygwin will suffice
+and they are not deeply essential anyway.
 
 #### Documentation
 
-Currently, documentation is in the ServerCore/doc directory.  While extensive,
-it badly needs to be updated to be friendlier with the new GitHub environment.
-I also need to run JavaDoc on the code and find a home for the resulting web
-pages.  However, if you run JavaDoc on the sources yourself, the resulting
-output is very usable -- the code is well documented in this regard.
+Currently, documentation is in the `ServerCore/doc` directory.  While
+extensive, it badly needs to be updated to be friendlier with the new GitHub
+environment.  I also need to run JavaDoc on the code and find a home for the
+resulting web pages.  However, if you run JavaDoc on the sources yourself, the
+resulting output is very usable -- the code is well documented in this regard.
 
 #### Binaries
 
