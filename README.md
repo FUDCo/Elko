@@ -98,6 +98,11 @@ make use of any language features newer than generic. The various shell scripts
 in the `Run` tree do assume a Unix shell environment, but Cygwin will suffice
 and they are not deeply essential anyway.
 
+#### Binaries
+
+If you don't feel like building Elko yourself, a pre-built .jar file
+is available in the attached Release (v2.0.1).
+
 #### Documentation
 
 Currently, documentation is in the `ServerCore/doc` directory.  While
@@ -105,11 +110,3 @@ extensive, it badly needs to be updated to be friendlier with the new GitHub
 environment.  I also need to run JavaDoc on the code and find a home for the
 resulting web pages.  However, if you run JavaDoc on the sources yourself, the
 resulting output is very usable -- the code is well documented in this regard.
-
-#### Binaries
-
-My goal is to eventually make precompiled .jar files available for this stuff.
-The appropriate manner for this to be hosted in the GitHub world is still
-something I haven't researched (I could just commit the .jar files to the repo,
-but that feels wrong).  Once this gets resolved, this README will be updated
-accordingly.
