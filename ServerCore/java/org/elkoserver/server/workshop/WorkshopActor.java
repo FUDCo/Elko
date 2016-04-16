@@ -105,7 +105,6 @@ public class WorkshopActor extends RoutingActor implements BasicProtocolActor
     /**
      * Guard function to guarantee that an operation is being attempted by an
      * actor who is authorized to do admin operations.
-     * 
      */
     public void ensureAuthorizedAdmin() throws MessageHandlerException {
         if (amLoggedOut) {

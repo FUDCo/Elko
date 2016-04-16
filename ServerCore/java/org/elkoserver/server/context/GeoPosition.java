@@ -9,7 +9,9 @@ import org.elkoserver.json.JSONLiteral;
  * the earth.
  */
 public class GeoPosition implements Position {
+    /** Position latitude, in decimal degrees. */
     public final double lat;
+    /** Position longitude, in decimal degrees. */
     public final double lon;
 
     /**

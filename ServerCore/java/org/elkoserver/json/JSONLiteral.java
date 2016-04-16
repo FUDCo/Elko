@@ -210,6 +210,20 @@ public class JSONLiteral {
     }
 
     /**
+     * Add an optional collection parameter to an incomplete literal.  This is
+     * similar to {@link #addParameter(String,Collection)}, except that if the
+     * value is null or the collection is empty, the parameter is not added.
+     *
+     * @param param  The parameter name.
+     * @param value  The optional (collection) parameter value.
+     */
+    public void addParameterOpt(String param, Collection value) {
+        if (value != null && value.size() > 0) {
+            addParameter(param, value);
+        }
+    }
+
+    /**
      * Add an int array parameter to an incomplete literal.
      *
      * @param param  The parameter name.
@@ -650,11 +664,11 @@ public class JSONLiteral {
                     case '\n': escape = 'n';  break;
                     case '\r': escape = 'r';  break;
                     case '\t': escape = 't';  break;
-                    case '/':
-                        if (theStrictnessFlag) {
-                            escape = '/';
-                        }
-                        break;
+                    //case '/':
+                    //    if (theStrictnessFlag) {
+                    //        escape = '/';
+                    //    }
+                    //    break;
                 }
                 if (escape != '*') {
                     buf.append(str.substring(start, i));

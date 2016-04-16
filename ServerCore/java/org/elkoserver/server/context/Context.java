@@ -687,6 +687,13 @@ public class Context extends BasicObject implements Deliverer {
         }
     }
 
+    /**
+     * Transmit a description of this context as a series of 'make' messages,
+     * such that the receiver will be able to construct a local presence of it.
+     *
+     * @param to  Where to send the description.
+     * @param maker  Maker object to address the message(s) to.
+     */
     public void sendObjectDescription(Deliverer to, Referenceable maker) {
         sendContextDescription(to, maker);
     }
@@ -851,6 +858,12 @@ public class Context extends BasicObject implements Deliverer {
         }
     }
 
+    /**
+     * Obtain an iterator over the users currently in this context.  Note that
+     * this iterator is only valid within a single turn.
+     *
+     * @return an @{link java.util.Iterator} over this context's current users.
+     */
     public Iterator<User> userIterator() {
         return new UserIterator();
     }

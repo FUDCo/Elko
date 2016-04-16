@@ -150,7 +150,7 @@ abstract public class BasicObject
         }
     }
 
-    public void notePendingInit() {
+    void notePendingInit() {
         ++myUnfinishedInitCount;
     }
 
@@ -158,7 +158,7 @@ abstract public class BasicObject
         return myUnfinishedInitCount <= 0;
     }
 
-    public void resolvePendingInit() {
+    void resolvePendingInit() {
         --myUnfinishedInitCount;
         if (myUnfinishedInitCount <= 0) {
             myContextor.resolvePendingInit(this);
@@ -577,6 +577,13 @@ abstract public class BasicObject
         myContents = Contents.withoutContents(myContents, item);
     }
     
+    /**
+     * Transmit a description of this object as a series of 'make' messages,
+     * such that the receiver will be able to construct a local presence of it.
+     *
+     * @param to  Where to send the description.
+     * @param maker  Maker object to address the message(s) to.
+     */
     abstract public void sendObjectDescription(Deliverer to,
                                                Referenceable maker);
 

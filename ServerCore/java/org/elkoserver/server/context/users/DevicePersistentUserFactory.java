@@ -13,7 +13,8 @@ import org.elkoserver.util.trace.Trace;
 import java.util.concurrent.Callable;
 
 /**
- * Factory used to generate a user from a device.
+ * Factory that generates a persistent user object from connected mobile device
+ * information.
  */
 public class DevicePersistentUserFactory implements UserFactory {
     
@@ -22,11 +23,21 @@ public class DevicePersistentUserFactory implements UserFactory {
      */
     private String myDevice;
 
+    /**
+     * JSON-driven constructor.
+     *
+     * @param device  The name of the device (IOS, etc).
+     */
     @JSONMethod({ "device" })
     public DevicePersistentUserFactory(String device) {
         myDevice = device;
     }  
     
+    /**
+     * Obtain the name of the device this factory works with.
+     *
+     * @param return this factory's device string.
+     */
     public String getDevice() {
         return myDevice;
     }
@@ -148,7 +159,7 @@ public class DevicePersistentUserFactory implements UserFactory {
     /**
      * Struct object holding login info for a device user.
      */
-    static class DeviceCredentials {
+    protected static class DeviceCredentials {
         /** The device ID */
         final public String uuid;
         /** Name of the user */

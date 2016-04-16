@@ -1,7 +1,7 @@
 package org.elkoserver.foundation.run;
 
 /**
- * An arbitrary (zero-argument) executable.  Similar to java.lang.Runnable but
+ * An arbitrary (zero-argument) executable.  Similar to {@link Runnable} but
  * can throw an exception.
  *
  * @see java.lang.Runnable

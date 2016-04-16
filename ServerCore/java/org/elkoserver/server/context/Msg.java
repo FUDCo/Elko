@@ -5,12 +5,12 @@ import org.elkoserver.json.JSONLiteral;
 import org.elkoserver.json.Referenceable;
 
 /**
- * This is a utility class with some static methods that generate various
- * generally useful messages that can be sent to the client.  These messages
- * are sent by a number of different classes, including, potentially,
- * application-defined {@link Mod} classes, so the methods to construct these
- * messages don't naturally belong with any particular server abstraction.
- * Hence this bag of miscellany.
+ * Utility class consisting of static methods that generate various generally
+ * useful messages that can be sent to the client.  These messages are sent by
+ * a number of different classes, including, potentially, application-defined
+ * {@link Mod} classes, so the methods to construct these messages don't
+ * naturally belong with any particular server abstraction.  Hence this bag of
+ * miscellany.
  */
 public class Msg {
     /**
@@ -30,6 +30,13 @@ public class Msg {
         return msg;
     }
     
+    /**
+     * Create an 'error' message.  This informs the client that something went
+     * wrong.
+     *
+     * @param target  Object the message is being sent to (the object being
+     *    informed).
+     */
     static public JSONLiteral msgError(Referenceable target, String op,
                                        String error)
     {

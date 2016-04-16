@@ -57,6 +57,10 @@ public class FilteringIterator<From,To> implements Iterator<To> {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Utility class implemented by filters used by the {@link
+     * FilteringIterator} iterator class.
+     */
     public static interface Filter<From, To> {
         /**
          * Generate an object of type To given an object of type From.

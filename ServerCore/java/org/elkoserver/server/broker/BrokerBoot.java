@@ -12,7 +12,7 @@ import org.elkoserver.foundation.server.metadata.ServiceDesc;
 import org.elkoserver.util.trace.Trace;
 
 /**
- * The Elko boot class for the Broker.  This Broker is a server allows a
+ * The Elko boot class for the Broker.  The Broker is a server allows a
  * cluster of Elko servers of various kinds to find out information about each
  * other's available services (and thus establish interconnectivity) without
  * having to be preconfigured.  It also shields the various servers from

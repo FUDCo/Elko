@@ -243,6 +243,11 @@ public class Contextor extends RefTable {
         }
     }
 
+    /**
+     * Obtain the application trace object for this context server.
+     *
+     * @return the context server's trace object.
+     */
     public Trace appTrace() {
         return tr;
     }
@@ -1220,7 +1225,7 @@ public class Contextor extends RefTable {
     }
 
     /**
-     * Generate a random number.
+     * Generate a high-quality random number.
      *
      * @return a random long.
      */
@@ -1399,8 +1404,7 @@ public class Contextor extends RefTable {
         }
     }
 
-    public void activateContentsItem(BasicObject container, String subID,
-                                     Item item) {
+    void activateContentsItem(BasicObject container, String subID, Item item) {
         String ref = item.ref() + subID;
         item.activate(ref, subID, container.isEphemeral(), this);
         item.setContainerPrim(container);

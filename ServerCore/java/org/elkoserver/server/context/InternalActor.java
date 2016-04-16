@@ -74,6 +74,10 @@ public class InternalActor extends RoutingActor implements BasicProtocolActor
         close();
     }
 
+    /**
+     * Guard function to guarantee that an operation is being attempted by an
+     * actor who is authorized to do it.
+     */
     public void ensureAuthorized() throws MessageHandlerException {
         if (!amAuthorized) {
             throw new MessageHandlerException("internal connection " + this +

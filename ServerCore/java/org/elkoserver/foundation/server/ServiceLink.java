@@ -4,6 +4,12 @@ import java.util.LinkedList;
 import org.elkoserver.foundation.json.Deliverer;
 import org.elkoserver.json.JSONLiteral;
 
+/**
+ * Class representing a connection to a service rather than to a specific
+ * client or server.  A service link can be maintained across loss of
+ * connectivity to specific connected entities, at the cost of allowing some
+ * of the state associated with the connection be ephemeral.
+ */
 public class ServiceLink implements Deliverer
 {
     /** The actor this link uses to communicate with its service, or null if

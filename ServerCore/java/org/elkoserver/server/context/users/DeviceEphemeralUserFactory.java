@@ -8,8 +8,17 @@ import org.elkoserver.server.context.User;
 import org.elkoserver.util.ArgRunnable;
 import java.util.concurrent.Callable;
 
+/**
+ * Factory that generates a non-persistent user object from connected mobile
+ * device information.
+ */
 public class DeviceEphemeralUserFactory extends DevicePersistentUserFactory {
 
+    /**
+     * JSON-driven constructor.
+     *
+     * @param device  The name of the device (IOS, etc).
+     */
     @JSONMethod({ "device" })
     public DeviceEphemeralUserFactory(String device) {
         super(device);

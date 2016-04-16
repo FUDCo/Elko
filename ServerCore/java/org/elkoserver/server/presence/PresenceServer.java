@@ -235,6 +235,11 @@ class PresenceServer {
         return myContextMetadata.get(contextRef);
     }
 
+    /**
+     * Obtain the application trace object for this presence server.
+     *
+     * @return the prsence server's trace object.
+     */
     public Trace appTrace() {
         return tr;
     }

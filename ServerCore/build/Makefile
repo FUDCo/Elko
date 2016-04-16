@@ -17,6 +17,9 @@ INSTALLABLE_NAME = ElkoServerInstall
 # Java compiler
 JAVAC = javac
 
+# Command for removing stuff
+RM = /bin/rm -rf
+
 # Compile flags
 #JFLAGS = -g -Xlint:unchecked -Xlint:deprecation
 JFLAGS = -g -Xlint:unchecked
@@ -95,7 +98,7 @@ DIRS = $(DEP_DIR) $(CLA_DIR) $(JAR_DIR) $(JAVADOC_DIR)
 EXTERNAL_JAVADOC = -link http://java.sun.com/j2se/1.5/docs/api
 
 JAVADOC_OPTS  = -sourcepath $(JAV_DIR) -classpath "$(CLASSPATH)"
-JAVADOC_LINKS = ${JAVADOC_OPTS} \
+JAVADOC_LINKS = $(JAVADOC_OPTS) \
   $(EXTERNAL_JAVADOC) \
   -tag internal:Xa:"Internal:" \
   -windowtitle "Elko Server Framework"
@@ -167,14 +170,14 @@ $(INSTALLABLE_NAME): $(INSTALLABLE_NAME_TARGET)
 $(SDK_NAME): $(SDK_NAME_TARGET)
 
 clean-installable:
-	rm -rf $(INSTALLABLE_NAME_TARGET) 
+	$(RM) $(INSTALLABLE_NAME_TARGET) 
 
 $(INSTALLABLE_NAME_TARGET):
 	$(eval TGT := $(shell cd $(dir $(INSTALLABLE_NAME_TARGET)); pwd))
 	cd $(TEMP_DIR) ; zip -r $(TGT)/$(notdir $(INSTALLABLE_NAME_TARGET)) .
 
 clean-sdk:
-	rm -rf $(SDK_NAME_TARGET) 
+	$(RM) $(SDK_NAME_TARGET) 
 
 $(SDK_NAME_TARGET):
 	$(eval TGT := $(shell cd $(dir $(SDK_NAME_TARGET)); pwd))
@@ -197,13 +200,13 @@ dist: all
 generated: $(DIRS) $(VERSION_DECL)
 
 finish-package: finish
-	rm -rf $(TEMP_DIR)
+	$(RM) $(TEMP_DIR)
 
 finish:
-	rm $(VERSION_DECL)
+	$(RM) $(VERSION_DECL)
 
 $(JAR_DIR)/elkoserver.jar: $(CLASS_BUILD_MARKER)
-	rm -rf $@
+	$(RM) $@
 	cd $(CLA_DIR); jar cf ../$@ \
 	    `find $(CLA_ROOT)/foundation -name '*.class'` \
 	    `find $(CLA_ROOT)/json -name '*.class'` \
@@ -213,7 +216,7 @@ $(JAR_DIR)/elkoserver.jar: $(CLASS_BUILD_MARKER)
 	    `find scalablessl -name '*.class'`
 
 do-javadoc: generated
-	rm -rf $(JAVADOC_DIR)/*
+	$(RM) $(JAVADOC_DIR)
 	javadoc -d $(JAVADOC_DIR) $(JAVADOC_LINKS) \
             @javadoc-package-list \
             -group "Elko Servers" \
@@ -252,7 +255,7 @@ $(JAR_DIR):
 	mkdir -p $(JAR_DIR)
 
 clean:
-	rm -rf $(BUILT_DIR) $(JAVADOC_DIR) $(VERSION_DECL)
+	$(RM) $(BUILT_DIR) $(JAVADOC_DIR) $(VERSION_DECL)
 
 $(CLA_DIR)/%.class: $(JAV_DIR)/%.java
 	touchp $@
