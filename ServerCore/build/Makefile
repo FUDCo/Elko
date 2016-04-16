@@ -95,7 +95,7 @@ ALL_DEP = $(ALL_JSRC:%.java=$(DEP_DIR)/%.d) $(ALL_TSRC:%.java.tmpl=$(DEP_DIR)/%.
 
 DIRS = $(DEP_DIR) $(CLA_DIR) $(JAR_DIR) $(JAVADOC_DIR)
 
-EXTERNAL_JAVADOC = -link http://java.sun.com/j2se/1.5/docs/api
+EXTERNAL_JAVADOC = -link http://docs.oracle.com/javase/6/docs/api
 
 JAVADOC_OPTS  = -sourcepath $(JAV_DIR) -classpath "$(CLASSPATH)"
 JAVADOC_LINKS = $(JAVADOC_OPTS) \
