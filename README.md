@@ -105,8 +105,6 @@ is available in the attached Release (v2.0.1).
 
 #### Documentation
 
-Currently, documentation is in the `ServerCore/doc` directory.  While
-extensive, it badly needs to be updated to be friendlier with the new GitHub
-environment.  I also need to run JavaDoc on the code and find a home for the
-resulting web pages.  However, if you run JavaDoc on the sources yourself, the
-resulting output is very usable -- the code is well documented in this regard.
+Currently, documentation is in the `ServerCore/doc` directory.  Eventually
+these pages will be viewable here on GitHub.  However, the JavaDoc files for
+the Elko classes are available [here](http://fudco.github.io/Elko/javadoc/).
