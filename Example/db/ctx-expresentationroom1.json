@@ -1,0 +1,9 @@
+{
+    type:"context",
+    ref:"ctx-expresentationroom1",
+    name:"Example Presentation Room",
+    capacity:20,
+    mods: [
+        { type:"schat", allowpush:true }
+    ]
+}

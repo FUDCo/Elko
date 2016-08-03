@@ -1,0 +1,5 @@
+{ ref:"user-exfred",
+  type:"user",
+  name:"Fred",
+  pos: { type: "cartpos", x:0, y:0 },
+  mods: [ { type: "exu" } ] }

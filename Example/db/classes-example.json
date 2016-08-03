@@ -1,0 +1,41 @@
+{
+    "ref": "classes-example",
+    "type": "classes",
+    "classes": [
+        {
+            "type": "class",
+            "tag": "schat",
+            "name": "com.example.game.mods.SimpleChat"
+        },
+        {
+            "type": "class",
+            "tag": "pchat",
+            "name": "com.example.game.mods.PrivateChat"
+        },
+        {
+            "type": "class",
+            "tag": "prop",
+            "name": "com.example.game.mods.Prop"
+        },
+        {
+            "type": "class",
+            "tag": "movement",
+            "name": "com.example.game.mods.Movement"
+        },
+        {
+            "type": "class",
+            "tag": "exc",
+            "name": "com.example.game.mods.ExampleContextMod"
+        },
+        {
+            "type": "class",
+            "tag": "exu",
+            "name": "com.example.game.mods.ExampleUserMod"
+        },
+        {
+            "type": "class",
+            "tag": "exi",
+            "name": "com.example.game.mods.ExampleItemMod"
+        }
+    ]
+}

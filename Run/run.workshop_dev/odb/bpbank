@@ -1,0 +1,7 @@
+{
+   ref: "bpbank",
+   bankref: "bankclient",
+   acctkey: "key-3c89946b1de91e99",
+   mintkey: "key-753670baf02af621",
+   type: "bpbank"
+}

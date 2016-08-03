@@ -1,0 +1,7 @@
+set LOCAL_JARS=./localmodules/module.jar
+
+if (! ${?CLASSPATH}) then
+  setenv CLASSPATH ${LOCAL_JARS}
+else
+  setenv CLASSPATH ${LOCAL_JARS}${DELIM}${CLASSPATH}
+endif

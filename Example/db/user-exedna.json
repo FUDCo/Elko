@@ -1,0 +1,5 @@
+{ ref:"user-exedna",
+  type:"user",
+  name:"Edna",
+  pos: { type: "cartpos", x:0, y:0 },
+  mods: [ { type: "exu" } ] }

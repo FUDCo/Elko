@@ -1,0 +1,55 @@
+#!/bin/csh
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=Director
+endif
+
+if (! ${?LOG_TAG}) then
+   set LOG_TAG=dir
+endif
+
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${BIND}
+
+@ PORT_CLIENT_TCP  = ${DIR_PORT_BASE}
+@ PORT_CLIENT_RTCP = ${DIR_PORT_BASE} + 1
+@ PORT_SERVER_TCP  = ${DIR_PORT_BASE} + 2
+
+@ BROKER_PORT = ${BRK_PORT_BASE} + 1
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_dire=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=${LOG_TAG} \
+   tracelog_dir=${TRACE_DIR} \
+   tracelog_rollover=daily \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_CLIENT_TCP} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_CLIENT_TCP} \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=user \
+   conf.listen.protocol=tcp \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_CLIENT_RTCP} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_CLIENT_RTCP} \
+   conf.listen1.auth.mode=open \
+   conf.listen1.allow=user \
+   conf.listen1.protocol=rtcp \
+   \
+   conf.listen2.host=${SERVER_HOST}:${PORT_SERVER_TCP} \
+   conf.listen2.bind=${SERVER_BIND}:${PORT_SERVER_TCP} \
+   conf.listen2.auth.mode=password \
+   conf.listen2.auth.code=figleaf \
+   conf.listen2.allow=any \
+   conf.listen2.protocol=tcp \
+   \
+   conf.broker.host=${SERVER_HOST}:${BROKER_PORT} \
+   conf.broker.auth.mode=password \
+   conf.broker.auth.code=figleaf \
+   \
+   conf.dir.name=${SERVER_NAME} \
+   conf.comm.jsonstrictness=true \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.director.DirectorBoot \
+   $*
+

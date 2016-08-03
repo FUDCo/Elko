@@ -1,0 +1,5 @@
+{
+    ref: "echotest",
+    type: "echotest",
+    prefix: "heh, heh, you said: "
+}

@@ -1,0 +1,13 @@
+{
+    type:"context",
+    ref:"ctx-exfield",
+    name:"A Play Field",
+    capacity:20,
+    mods: [
+        { type:"schat" },
+        { type:"movement", minx:0, maxx:1000, miny:0, maxy:1000 },
+        { type:"exc" }
+    ],
+    ref$contents:[ "item-expenguin1", "item-expenguin2",
+                   "item-exrock1", "item-exrock2", "item-exrock3" ]
+}

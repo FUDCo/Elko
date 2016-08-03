@@ -1,0 +1,9 @@
+{
+    type:"context",
+    ref:"ctx-exchatroom1",
+    name:"Example Chat Room",
+    capacity:20,
+    mods: [
+        { type:"schat" }
+    ]
+}

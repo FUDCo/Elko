@@ -1,0 +1,64 @@
+#!/bin/csh
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=ContextServer
+endif
+
+if (! ${?LOG_TAG}) then
+   set LOG_TAG=ctx
+endif
+
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${BIND}
+
+@ PORT_RESV_TCP  = ${CTX_PORT_BASE} + 0
+@ PORT_RESV_HTTP = ${CTX_PORT_BASE} + 1
+@ PORT_RESV_RTCP = ${CTX_PORT_BASE} + 2
+
+@ BROKER_PORT = ${BRK_PORT_BASE} + 1
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_cont=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=${LOG_TAG} \
+   tracelog_dir=${TRACE_DIR} \
+   tracelog_rollover=daily \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_RESV_TCP} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_RESV_TCP} \
+   conf.listen.protocol=tcp \
+#   conf.listen.auth.mode=reservation \
+   conf.listen.auth.mode=open \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_RESV_HTTP} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_RESV_HTTP} \
+   conf.listen1.protocol=http \
+   conf.listen1.domain=${DOMAIN} \
+   conf.listen1.root=test \
+   conf.listen1.auth.mode=reservation \
+   \
+   conf.listen2.host=${SERVER_HOST}:${PORT_RESV_RTCP} \
+   conf.listen2.bind=${SERVER_BIND}:${PORT_RESV_RTCP} \
+   conf.listen2.protocol=rtcp \
+   conf.listen2.auth.mode=reservation \
+   \
+   conf.register.auto=true \
+   conf.comm.jsonstrictness=true \
+   conf.context.entrytimeout=30 \
+   conf.context.reservationexpire=300 \
+   \
+   conf.broker.host=${SERVER_HOST}:${BROKER_PORT} \
+   conf.broker.auth.mode=password \
+   conf.broker.auth.code=figleaf \
+   \
+   conf.context.odb=mongo \
+   conf.context.odb.mongo.hostport=${MONGOHOST} \
+   conf.context.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+   conf.context.classdesc="classes-bank,classes-module" \
+#  conf.context.statics="statics-foo" \
+   conf.context.name=${SERVER_NAME} \
+   conf.context.shutdownpassword=figleaf \
+   conf.msgdiagnostics=true \
+   \
+   org.elkoserver.server.context.ContextServerBoot \
+   $*

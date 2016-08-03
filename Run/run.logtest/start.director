@@ -1,0 +1,7 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+set TRACE_DIR=./logs
+
+source launch.director &

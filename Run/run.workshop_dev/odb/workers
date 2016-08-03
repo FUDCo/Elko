@@ -1,0 +1,10 @@
+{
+   ref: "workers",
+   type: "workers",
+   workers: [
+      {
+         key: "bank",
+         ref: "bankservice"
+      }
+   ]
+}

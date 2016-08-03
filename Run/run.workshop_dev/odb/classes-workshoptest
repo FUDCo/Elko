@@ -1,0 +1,11 @@
+{
+    ref: "classes-workshoptest",
+    type: "classes",
+    classes: [
+        {
+            type: "class",
+            tag: "echotest",
+            name: "org.elkoserver.server.workshop.test.EchoWorker"
+        }
+    ]
+}
