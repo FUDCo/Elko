@@ -1,0 +1,12 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+set TRACE_DIR=./logs
+
+source launch.broker &
+source launch.director &
+source launch.context &
+
+set JAVA_RUN=jdb
+source launch.workshop

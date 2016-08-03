@@ -1,0 +1,11 @@
+char *buf();
+char *pClassAccessFlags(int flags);
+char *pClassName(ClassFile *cf, int index);
+char *pFieldAccessFlags(int flags);
+char *pMethodAccessFlags(int flags);
+char *pMethodName(ClassFile *cf, int index);
+char *pNameAndType(ClassFile *cf, int index);
+char *pUtf8(ClassFile *cf, int index);
+void reverseBytes(char *data, int length);
+void spAppend(char *buf, char *str);
+void testEndianism();

@@ -1,0 +1,37 @@
+{
+   rootkey: "key-77019e5c20a46cdf",
+   ref: "testbank",
+   currencies: [
+      {
+         memo: "First test currency",
+         name: "Zlotny"
+      },
+      {
+         memo: "They're yummy",
+         name: "Kabobs"
+      }
+   ],
+   keys: [
+      {
+         ref: "key-261954dd3aa129b3",
+         expires: {
+            when: 0
+         },
+         memo: "Kebobs currency key",
+         parent: "key-77019e5c20a46cdf",
+         auth: "curr",
+         currs: [ "Kabobs" ]
+      },
+      {
+         ref: "key-2416c2333ebd82d",
+         expires: {
+            when: 0
+         },
+         memo: "Zlotny currency key",
+         parent: "key-77019e5c20a46cdf",
+         auth: "curr",
+         currs: [ "Zlotny" ]
+      }
+   ],
+   type: "bank"
+}

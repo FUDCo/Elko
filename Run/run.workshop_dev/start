@@ -1,0 +1,53 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=Workshop
+endif
+
+if (! ${?LOG_TAG}) then
+   set LOG_TAG=work
+endif
+
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN = ${WORK_PORT_BASE}
+@ PORT_PSWD = ${WORK_PORT_BASE} + 1
+
+@ BROKER_PORT = ${BROK_PORT_BASE} + 1
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_work=EVENT \
+   trace_comm=EVENT \
+   tracelog_tag=${LOG_TAG} \
+   \
+   conf.comm.jsonstrictness=true \
+   \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN} \
+   conf.listen.protocol=tcp \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=any \
+   \
+   conf.listen1.host=${SERVER_HOST}:${PORT_PSWD} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_PSWD} \
+   conf.listen1.protocol=tcp \
+   conf.listen1.auth.mode=password \
+   conf.listen1.auth.code=figleaf \
+   conf.listen1.allow=any \
+   \
+   conf.broker.host=${SERVER_HOST}:${BROKER_PORT} \
+   \
+   conf.workshop.odb=mongo \
+   conf.workshop.odb.mongo.hostport=${MONGOHOST} \
+   conf.workshop.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+   conf.workshop.classdesc="classes-workshoptest,classes-bank" \
+   conf.workshop.shutdownpassword=figleaf \
+   conf.workshop.name=${SERVER_NAME} \
+   conf.load.time=300 \
+   conf.msgdiagnostics=true \
+   \
+   org.elkoserver.server.workshop.WorkshopBoot \
+   $*

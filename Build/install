@@ -1,0 +1,177 @@
+#!/bin/bash
+echo "Elko Server installer settings setup script"
+echo
+echo "Values appearing in brackets [like this] represent the default."
+echo "You can choose to take the default simply by hitting return."
+echo
+echo "You will be given a chance to confirm or reject all your chosen settings"
+echo "before installation actually takes place."
+echo
+
+function yesorno()
+{
+    ANSWER=x
+    while [ $ANSWER != "no" -a $ANSWER != "yes" ]; do
+        echo -n $*": yes or no [yes]? "
+        read ANSWER JUNK
+        if [ x$ANSWER = x ]; then
+            ANSWER=yes
+        elif [ $ANSWER = "y" -o $ANSWER = "yes" ]; then
+            ANSWER=yes
+        elif [ $ANSWER = "n" -o $ANSWER = "no" ]; then
+            ANSWER=no
+        else
+            echo "Please enter either 'yes' or 'no'"
+        fi
+    done
+}
+
+function abortinstall()
+{
+    echo $*
+    echo "Aborting installation, no changes made."
+    exit
+}
+
+read -p "Installation directory [~elko]? " IDIR JUNK
+if [ x$IDIR = x ]; then
+    IDIR=~elko
+fi
+
+ISRCROOT=ElkoDeploy
+IDSTROOT=ElkoServer
+
+read -p "Installation name [$IDSTROOT]? " IROOT JUNK
+if [ x$IROOT = x ]; then
+    IROOT=$IDSTROOT
+fi
+
+ITARGET=$IDIR/$IROOT
+ISOURCE=./$ISRCROOT
+
+IRUN=$ITARGET/Run
+
+ITYPE=x
+while [ $ITYPE != "new" -a $ITYPE != "update" ]; do
+    read -p "Type of installation: new or update [update]? " ITYPE JUNK
+    if [ x$ITYPE = x ]; then
+        ITYPE=update
+    elif [ $ITYPE = "new" -o $ITYPE = "n" ]; then
+        ITYPE=new
+    elif [ $ITYPE = "update" -o $ITYPE = "u" ]; then
+        ITYPE=update
+    else
+        echo "Please enter either 'new' or 'update'"
+    fi
+done
+
+if [ $ITYPE = "update" ]; then
+    echo "Options for update installation:"
+
+    yesorno "Update server code"
+    DO_CODE=$ANSWER
+
+    yesorno "Update object database entries"
+    DO_DB=$ANSWER
+elif [ $ITYPE = "new" ]; then
+    yesorno "Avoid clobbering any existing installation"
+    DONT_CLEAR=$ANSWER
+
+    DO_CODE=yes
+    DO_DB=yes
+fi
+
+if [ $DO_DB = "yes" ]; then
+    yesorno "Retain existing objects from the object database"
+    DONT_DBPURGE=$ANSWER
+fi
+
+echo
+echo "Summary of selected settings..."
+echo "     Installation destination:" $ITARGET
+echo "              Kind of install:" $ITYPE
+if [ $ITYPE = "update" ]; then
+    echo "          Should install code:" $DO_CODE
+    echo "   Should install ODB entries:" $DO_DB
+elif [ $ITYPE = "new" ]; then
+    echo "Protect existing installation:" $DONT_CLEAR
+fi
+if [ $DO_DB = "yes" ]; then
+    echo "  Retain existing ODB objects:" $DONT_DBPURGE
+fi
+echo
+yesorno "Continue installation with these choices?"
+if [ $ANSWER != "yes" ]; then
+   abortinstall "Well, never mind then."
+   exit
+fi
+
+if [ ! -e $ISOURCE ]; then
+    IARCHIVE=$ISOURCE.tar.gz
+    if [ -e $IARCHIVE ]; then
+        tar xfz $IARCHIVE
+    fi
+fi
+
+if [ ! -e $ISOURCE ]; then
+    abortinstall "Unpacked distribution package missing!"
+fi
+
+if [ $ITYPE = "new" ]; then
+    if [ -e $ITARGET ]; then
+        if [ $DONT_CLEAR = "yes" ]; then
+            abortinstall "A previously installed version is already present."
+        else
+            rm -rf $ITARGET
+        fi
+    fi
+    mv $ISOURCE $ITARGET
+elif [ $ITYPE = "update" ]; then
+    if [ ! -e $ITARGET ]; then
+        abortinstall "Can't update: no previously installed version found."
+    fi
+    if [ $DO_CODE = "yes" ]; then
+        cp $ISOURCE/Distrib/External/*.jar $ITARGET/Distrib/External
+        cp $ISOURCE/Distrib/Internal/*.jar $ITARGET/Distrib/Internal
+        cp $ISOURCE/Scripts/* $ITARGET/Scripts
+        cp $ISOURCE/Run/common/* $ITARGET/Run/common
+        cp $ISOURCE/Run/manage/* $ITARGET/Run/manage
+        mkdir -p $ITARGET/Run/overview
+        for RUNDIR in $ISOURCE/Run/run.*; do
+            RTARGET=$ITARGET/Run/`basename $RUNDIR`
+            if [ ! -e $RTARGET ]; then
+                cp -r $RUNDIR $RTARGET
+            else
+                rsync -ru $RUNDIR $ITARGET/Run
+                if [ -e $RTARGET/setup.done ]; then
+                    rm -f $RTARGET/setup
+                fi
+            fi
+        done
+    fi
+fi
+
+MANAGE_ENVIRON=$IRUN/manage/manage_environ.php
+echo "<?php" > $MANAGE_ENVIRON
+echo '$runPathBase = "'$IRUN'";' >> $MANAGE_ENVIRON
+echo "?>" >> $MANAGE_ENVIRON
+
+if [ $DO_DB = "yes" ]; then
+    cd $ITARGET/Scripts
+    if [ $DONT_DBPURGE = "no" ]; then
+        ./dbpurge.sh
+    fi
+    ./dbinit.sh
+fi
+
+cd $IRUN
+shopt -s nullglob
+for SETUP in run.*/setup; do
+    cd `dirname $SETUP`
+    echo "running setup in $pwd"
+    ./setup
+    mv setup setup.done
+    cd ..
+done
+
+chmod a+rwx $ITARGET/Run/run.*/control

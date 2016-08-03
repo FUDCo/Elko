@@ -1,0 +1,11 @@
+{
+  type: "item",
+  ref: "item-exrock3",
+  mods: [
+    { type: "prop", kind: "rock" },
+    { type: "exi", str1: "White", int1:3 }
+  ],
+  portable: true,
+  pos: { type: "cartpos", x:5, y:5 },
+  name: "Big rock"
+}

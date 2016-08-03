@@ -1,0 +1,45 @@
+{to:"bank", op:"issuerootkey", rep:"q"}
+
+{to:"workshop", op:"auth"}
+
+{to:"bank", op:"makecurrency", rep:"q", key:"key-472792a8bdc28104",
+curr:"Zlotny", memo:"First test currency"}
+
+{to:"bank", op:"makecurrency", rep:"q", key:"key-472792a8bdc28104",
+curr:"Kabobs", memo:"They're yummy"}
+
+{to:"bank", op:"querycurrencies", rep:"q", key:"key-472792a8bdc28104"}
+
+{to:"bank", op:"makeaccount", rep:"q", key:"key-472792a8bdc28104",
+curr:"Zlotny", memo:"Alice's account", owner:"u-alice"}
+
+{to:"bank", op:"makeaccount", rep:"q", key:"key-472792a8bdc28104",
+curr:"Zlotny", memo:"Bob's account", owner:"u-bob"}
+
+{to:"bank", op:"mint", rep:"q", key:"key-472792a8bdc28104",
+amount:1000, dst:"acct-59a931d975169e6d"}
+
+{to:"bank", op:"xfer", rep:"q", key:"key-472792a8bdc28104", amount:211,
+src:"acct-59a931d975169e6d", dst:"acct-65aec79ef2b84d07"}
+
+{to:"bank", op:"queryaccount", rep:"q", key:"key-472792a8bdc28104", encs:true,
+account:"acct-59a931d975169e6d"}
+
+{to:"bank", op:"queryaccount", rep:"q", key:"key-472792a8bdc28104", encs:true,
+account:"acct-65aec79ef2b84d07"}
+
+{to:"bank", op:"unmint", rep:"q", key:"key-472792a8bdc28104",
+amount:100, src:"acct-65aec79ef2b84d07"}
+
+{to:"bank", op:"encumber", rep:"q", key:"key-472792a8bdc28104", amount:77,
+src:"acct-59a931d975169e6d", expires:"Dec 21, 2011 11:24:30 AM"}
+
+{to:"bank", op:"queryaccount", rep:"q", key:"key-472792a8bdc28104", encs:true,
+account:"acct-59a931d975169e6d"}
+
+{to:"bank", op:"queryenc", rep:"q", key:"key-472792a8bdc28104",
+enc:"enc-3ff19836bd19e698"}
+
+{to:"bank", op:"makekey", rep:"q",  key:"key-472792a8bdc28104",
+auth:"curr", curr:"Zlotny", memo:"Zlotny currency key"}
+

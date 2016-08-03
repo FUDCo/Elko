@@ -1,0 +1,6 @@
+{
+    ref: "bankservice",
+    type: "bankserice",
+    service: "bank",
+    bank: "bank"
+}

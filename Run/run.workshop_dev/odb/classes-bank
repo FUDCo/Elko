@@ -1,0 +1,21 @@
+{
+    ref: "classes-bank",
+    type: "classes",
+    classes: [
+        {
+            type: "class",
+            tag: "bankservice",
+            name: "org.elkoserver.server.workshop.bank.BankWorker"
+        },
+        {
+            type: "class",
+            tag: "bank",
+            name: "org.elkoserver.server.workshop.bank.Bank"
+        },
+        {
+            type: "class",
+            tag: "bankacct",
+            name: "org.elkoserver.server.workshop.bank.Account"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+  type: "item",
+  ref: "item-exrock2",
+  mods: [
+    { type: "prop", kind: "rock" },
+    { type: "exi", str1: "Black", int1:2 }
+  ],
+  portable: true,
+  pos: { type: "cartpos", x:5, y:5 },
+  name: "Medium rock"
+}

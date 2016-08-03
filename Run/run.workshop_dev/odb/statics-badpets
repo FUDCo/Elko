@@ -1,0 +1,14 @@
+{
+   ref: "statics"
+   type: "statics",
+   statics: [
+      {
+         key: "bpbank",
+         ref: "bpbank"
+      },
+      {
+         key: "bankclient",
+         ref: "bankclient"
+      }
+   ],
+}

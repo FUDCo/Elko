@@ -1,0 +1,42 @@
+#!/bin/csh
+
+source ../common/setenvvars
+
+if (! ${?SERVER_NAME}) then
+   set SERVER_NAME=PresenceServer
+endif
+
+#set SERVER_HOST=${HOST}.${DOMAIN}
+set SERVER_HOST=${HOST}
+set SERVER_BIND=${HOST}
+
+@ PORT_OPEN = ${PRE_PORT_BASE}
+@ PORT_PSWD = ${PRE_PORT_BASE} + 1
+
+${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
+   trace_pres=EVENT \
+   trace_comm=EVENT \
+   tracelog_showverbose=true \
+   tracelog_tag=prelog \
+   tracelog_dir=${TRACE_DIR} \
+   conf.comm.jsonstrictness=false \
+   conf.presence.name=${SERVER_NAME} \
+   conf.listen.host=${SERVER_HOST}:${PORT_OPEN} \
+   conf.listen.bind=${SERVER_BIND}:${PORT_OPEN} \
+   conf.listen.protocol=tcp \
+   conf.listen.auth.mode=open \
+   conf.listen.allow=any \
+   conf.listen1.host=${SERVER_HOST}:${PORT_PSWD} \
+   conf.listen1.bind=${SERVER_BIND}:${PORT_PSWD} \
+   conf.listen1.protocol=tcp \
+   conf.listen1.auth.mode=password \
+   conf.listen1.auth.code=secret \
+   conf.listen1.allow=admin \
+   conf.presence.odb=mongo \
+   conf.presence.odb.mongo.hostport=localhost:27017 \
+   conf.presence.objstore=org.elkoserver.objdb.store.mongostore.MongoObjectStore \
+   conf.presence.shutdownpassword=figleaf \
+   conf.msgdiagnostics=true \
+   org.elkoserver.server.presence.PresenceServerBoot \
+   $*
+

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+while [ $# -gt 0 ]; do
+    echo "Stripping $1"
+    DIR=`dirname $1`
+    BASE=`basename $1 .jar`
+    TMP=$DIR/$BASE-jardump
+    mkdir $TMP
+    cd $TMP
+    jar xf $1
+    find . -name '*.class' -exec stripclass {} \;
+    find . -name '*.class' -delete
+    MAGIC="mv '{}' \`dirname '{}'\`/\`basename '{}' .alt\`"
+    find . -name '*.class.alt' -exec sh -c "$MAGIC" \;
+    jar cf temp.jar `find . -name '*.class'`
+    cd ..
+    mv $TMP/temp.jar $1
+    rm -rf $TMP
+    shift
+done

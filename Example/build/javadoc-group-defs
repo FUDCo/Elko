@@ -1,0 +1,1 @@
+-group "Example Game" "$(PKG_ROOT).example:$(PKG_ROOT).example.mods:$(PKG_ROOT).example.utils"
