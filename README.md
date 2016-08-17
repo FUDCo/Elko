@@ -54,7 +54,8 @@ Elko is open source software, under the MIT license.  See the file `LICENSE.md`
 ## What's Here
 
 * `Build` -- contains top level build files; however, you probably want the
-  ones in `ServerCore/build` instead.
+  ones in `ServerCore/build` instead (see the **Building** section immediately
+  below).
 
 * `ServerCore` -- contains the Elko server framework itself, along with its
   documentation.
@@ -72,9 +73,7 @@ Elko is open source software, under the MIT license.  See the file `LICENSE.md`
 #### Building
 
 To build the Java code from the sources directly as is, you will also need the
-[jdep](http://www.fudco.com/software/jdep.html) utility and GNU Make.  Jdep is
-currently hosted on my own website, but I hope to have it moved to GitHub
-shortly.  I'll update this page when that happens.
+[jdep](https://github.com/FUDCo/jdep) utility and GNU Make.
 
 Note that most people doing Java development these days use one of the several
 popular Java IDEs and/or [Maven](https://maven.apache.org), but at the moment
@@ -97,17 +96,21 @@ More detail on building will be presented in an accompanying `BUILD.md` file
 once I get done writing it.
 
 All the Java code works on any standard, reasonably current JVM, as it does not
-make use of any language features newer than generic. The various shell scripts
-in the `Run` tree do assume a Unix shell environment, but Cygwin will suffice
-and they are not deeply essential anyway.
+make use of any language features newer than generics. The various shell
+scripts in the `Run` tree do assume a Unix shell environment, but Cygwin will
+suffice and they are not deeply essential anyway.
 
 #### Binaries
 
-If you don't feel like building Elko yourself, a pre-built .jar file
-is available in the attached Release (v2.0.1).
+If you don't feel like building Elko yourself, a pre-built .jar file is
+available in the attached Release (v2.0.1).
 
 #### Documentation
 
-Currently, documentation is in the `ServerCore/doc` directory.  Eventually
-these pages will be viewable here on GitHub.  However, the JavaDoc files for
-the Elko classes are available [here](http://fudco.github.io/Elko/javadoc/).
+Detailed API and protocl documentation is sourced in the `ServerCore/doc`
+directory, but is viewable directly [here](http://fudco.github.io/Elko/).  The
+*formatting* of what's there right now is a bit rough, not having entirely made
+the transition from its old home, but the content per se is as complete and up
+to date as ever.  This will get prettier when I complete the migration to
+Jekyll.
+
