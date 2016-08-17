@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Gatekeeper Protocols</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Elko Gatekeeper Protocols</h1>
+
+<h2>The Gatekeeper</h2>
+
+<p>The <em>Gatekeeper</em> is an Elko server that provides login reservation
+and authentication services for other Elko servers such as the Director.  If
+you wish to use user accounts or some other authentication or access control
+abstraction to regulate access to a collection of Elko servers, you typically
+place a Gatekeeper between a user and a Director rather than having the user
+communicate with the Director directly.
+
+<p>A Gatekeeper understands two different JSON message protocols.  These
+correspond to the two kinds of actors who may wish to communicate with a
+Gatekeeper: users seeking to login or manage their accounts, and
+administrators.  Each of the ports that a Gatekeeper listens for connections on
+can be configured to support either or both of these protocols.
+
+<p>Each of these protocols is associated with a particular object ref to which
+messages should be addressed:
+
+<ul>
+<li><code>gatekeeper</code> for user messages requesting access.</li>
+<li><code>admin</code> for administrator messages.</li>
+</ul>
+
+<p>Note that since a Gatekeeper makes its own outbound connection to a Director
+per its configuration, it also speaks the <code>director</code> protocol
+However, the Gatekeeper speaks the client side of this protocol; you cannot
+yourself establish a connection to a Gatekeeper port that uses this protocol.
+
+<h2>User Protocol</h2>
+
+<p>The Gatekeeper user protocol is used by clients who wish to make an
+authenticated entry into a context.
+
+<h3>reserve</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"gatekeeper", op:"reserve", protocol:<i>STR</i>,
+          context:<i>CONTEXTREF_STR</i>, id:<i>?STR</i>, name:<i>?STR</i>,
+          password:<i>?STR</i> }
+</code></div>
+
+<p>This message requests a reservation for entry into a context.
+
+<ul>
+<li><code>protocol</code> is the communications protocol by which the
+requestor wishes to communicate with the Context Server into which the
+requested context will be loaded.  Valid values currently
+are <code>"http"</code> or
+<code>"tcp"</code>.</li>
+
+<li><code>context</code> is the ref of the context into which entry is
+sought.</li>
+
+<li><code>id</code> is an identifier for the entity who is seeking entry.  This
+is interpreted in the scope of whatever authentication regime the Gatekeeper is
+configured to be using.  It may be omitted if the context in question does not
+support a user abstraction or if it supports anonymous users.</li>
+
+<li><code>name</code> is an optional displayable name string for the user who
+is seeking entry.  If omitted, it will be empty.</li>
+
+<li><code>password</code> is the password (or similar authentication string) to
+authenticate the access of the indicated user, as is appropriate for whatever
+authentication regime the Gatekeeper is configured to be using.
+</ul>
+
+If the reservation is successful, the reply will take the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"gatekeeper", op:"reserve", context:<i>CONTEXTREF_STR</i>,
+          id:<i>?STR</i>, actor:<i>?STR</i>, name:<i>?STR</i>,
+          auth:<i>?STR</i>, hostport:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context, which will match the
+corresponding parameter from the request.</li>
+
+<li><code>id</code> is an identifier for the entity that sought entry, which
+will match the corresponding parameter from the request (and will be omitted if
+it was omitted from the request).</li>
+
+<li><code>actor</code> is an object ref for the object representing the user in
+the context, which may be omitted if this is not a relevant abstraction for the
+context in question.</li>
+
+<li><code>name</code> is a displayable string labelling the user in the
+context, if relevant.</li>
+
+<li><code>auth</code> is the authorization code (typically a reservation token)
+to present to the Context Server in the <code>entercontext</code> request to
+enter the context.</li>
+
+<li><code>hostport</code> is a string of the form
+<code>"<em>hostname</em>:<em>portnumber</em>"</code> indicating the host name
+and port number of the Context Server on which the reservation has been
+made.</li>
+</ul>
+
+If the reservation fails, the reply will take the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"gatekeeper", op:"reserve", context:<i>CONTEXTREF_STR</i>,
+          id:<i>?STR</i>, deny:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> and <code>id</code> have the same meanings as in the
+success case.</li>
+
+<li><code>deny</code> is an error message string indicating why the
+reservation could not be made.</li>
+</ul>
+
+<h3>setpassword</h3>
+
+<div class="indent"><code>
+&rarr; { to:"gatekeeper", op:"setpassword", id:<i>STR</i>,
+         oldpassword:<i>?STR</i>, newpassword:<i>?STR</i> }
+</code></div>
+
+<p>This message makes a request to the Gatekeeper to change a user's password.
+
+<p>where:
+
+<ul>
+
+<li><code>id</code> is an identifier for the user seeking to change tneir
+password.  This is interpreted in the scope of whatever authentication regime
+the Gatekeeper is configured to be using.</li>
+
+<li><code>oldpassword</code> is the password (or similar authentication string)
+to authenticate the access of the indicated user, as is appropriate for
+whatever authentication regime the Gatekeeper is configured to be using.</li>
+
+<li><code>newpassword</code> is the new password string for the user.
+to authenticate the access of the indicated user, as is appropriate for
+whatever authentication regime the Gatekeeper is configured to be using.</li>
+</ul>
+
+
+<h2>Admin Protocol</h2>
+
+<p>The Gatekeeper admin protocol is used to administer the Gatekeeper server.
+
+<h3>director</h3>
+
+<div class="indent"><code>
+&rarr; { to:"admin", op:"director", hostport:<i>?STR</i>,
+         auth:<i>?AUTHDESC</i> }
+</code></div>
+
+<p>This message requests that the Director this Gatekeeper is talking to to be
+changed or reported.
+
+<p>where:
+
+<ul>
+<li><code>hostport</code> is a string of the form
+<code>"<em>hostname</em>:<em>portnumber</em>"</code> indicating the host name
+and port number of the Director that the Gatekeeper should now use.  If
+omitted, the request merely asks that the Director be reported in the reply
+without being changed.</li>
+
+<li><code>auth</code> is an optional bundle of authorization information for
+the Gatekeeper to use in establishing its connection to the Director.  This
+is exactly the authorization descriptor documented in the description of the
+<a href="director.html#auth">Director's <code>auth</code> message</a>.
+</li>
+</ul>
+
+The Gatekeeper will normally reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"gatekeeper", op:"director", hostport:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>hostport</code> is a string of the form
+<code>"<em>hostname</em>:<em>portnumber</em>"</code> indicating the host name
+and port number of the Director that the Gatekeeper is using.</li>
+</ul>
+
+In the event of a failure to update the Director setting, the Gatekeeper will
+reply with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"gatekeeper", op:"director", failure:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>failure</code> is an error message string attempting to describe what
+went wrong.</li>
+</ul>
+
+<h3>reinit</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"reinit" }
+</code></div>
+
+<p>This message instructs the Gatekeeper to reinitialize itself.
+
+<h3>shutdown</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"shutdown" kill:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Gatekeeper to shut itself down.
+
+<p>where:
+
+<ul>
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination of the server.  Normally, a server will empty its message queues,
+checkpoint any active state, and perform an orderly shutdown.  However, if
+the <code>kill</code> flag is true, it will exit immediately without stopping
+to clean things up.  The value defaults to false if the parameter is
+omitted.</li>
+</ul>
+
+</div>
+</div>
+</body>
+</html>

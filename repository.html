@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Repository Protocols</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Elko Repository Protocols</h1>
+
+<h2>The Repository</h2>
+
+<p>The <em>Repository</em> is an Elko server that provides
+persistent storage for objects.  Context servers can be configured to use
+either a local repository that they access directly or to communicate with a
+Repository server.  The protocols described here are for the latter case.
+
+<p>A Repository understands two different JSON message protocols.  These
+correspond to the two kinds of actors who may wish to communicate with a
+Repository: other servers seeking to retrieve or store persistent objects, and
+administrators.  Each of the ports that a Repository listens for connections on
+can be configured to support either or both of these protocols.
+
+<p>Each of these protocols is associated with a particular object ref to which
+messages should be addressed:
+
+<ul>
+<li><code>rep</code> for object repository access.</li>
+<li><code>admin</code> for administrator messages.</li>
+</ul>
+
+<h2>Repository Protocol</h2>
+
+<p>The repository protocol is used by clients who wish to access the persistent
+objects that the Repository manages.
+
+<h3>get</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"rep", op:"get", what:[<i>REQUESTDESC</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>This message requests the retrieval of the persistent state of one or more
+objects.
+
+<ul>
+<li><code>what</code> is an array of object request descriptors specifying the
+objects whose retrieval is sought.</li>
+
+<li><code>tag</code> is an optional tag string that, if given, will be sent
+back with the response(s), to help the client match up requests and responses.
+</ul>
+
+An object request descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"reqi", ref:<i>STR</i>, contents:<i>?BOOL</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>ref</code> is the reference string identifying the object
+sought.</li>
+
+<li><code>contents</code> is an optional boolean flag that, if true, indicates
+that any objects contained by the requested object (any objects in the entire
+containment hierarchy rooted at the object, in fact) should also be retrieved.
+If omitted it defaults to false.</li>
+</ul>
+
+The Repository will reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"rep", op:"get", results:[<i>OBJDESC</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>results</code> is an array of object descriptors, one for each object
+that was requested (directly or indirectly) in the original <code>get</code>
+message.</li>
+
+<li><code>tag</code> echoes the tag from the <code>get</code> request, if
+there was one, or will be omitted if the original <code>get</code> also
+omitted it.</li>
+</ul>
+
+An object descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"obji", ref:<i>STR</i>, obj:<i>?OBJ</i>, failure:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>ref</code> is the reference string identifying the object.</li>
+
+<li><code>obj</code> is representation of the state of the object.  The details
+of this will, of course, vary depending upon what kind of object it is.  This
+will be absent if the object could not be retrieved.</li>
+
+<li><code>failure</code> is an error message string indicating the reason why
+the Repository was unable retrieve the object.  This will only appear in
+failure cases.</li>
+</ul>
+
+<h3>put</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"rep", op:"put", what:[<i>OBJDESC</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>This message requests the Repository to store the new persistent state of
+one or more objects.
+
+<ul>
+<li><code>what</code> is an array of object descriptors containing the states
+of the objects that are to be stored.  These object descriptors take the form
+documented above in the description of the <code>get</code> request.</li>
+
+<li><code>tag</code> is an optional tag string that, if given, will be sent
+back with the response(s), to help the client match up requests and responses.
+</ul>
+
+Storage is atomic over the full collection of objects transmitted in
+the <code>put</code> request.  That is, the persistent states of all specified
+objects are updated or none are.
+
+<p>Note that there is no explicit "create" operation.  Simply issue
+a <code>put</code> for an object not currently stored.
+
+The Repository will reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"rep", op:"put", results:[<i>RESULTDESC</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>results</code> is an array of result descriptors, one for each object
+whose storage was requested in the original <code>put</code> message.</li>
+
+<li><code>tag</code> echoes the tag from the <code>put</code> request, if
+there was one, or will be omitted if the original <code>put</code> also
+omitted it.</li>
+</ul>
+
+A result descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"stati", ref:<i>STR</i>, failure:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>ref</code> is a reference string identifying the object the result
+pertains to.</li>
+
+<li><code>failure</code> is an error message string indicating the reason why
+the Repository was unable store the object.  This will only appear in
+failure cases.</li>
+</ul>
+
+<h3>remove</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"rep", op:"remove", refs:[<i>STR</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>This message requests the Repository to delete the persistent state of one
+or more objects.
+
+<ul>
+<li><code>refs</code> is an array of object reference strings identifying the
+objects to be deleted.</li>
+
+<li><code>tag</code> is an optional tag string that, if given, will be sent
+back with the response(s), to help the client match up requests and responses.
+</ul>
+
+The Repository will reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"rep", op:"remove", results:[<i>RESULTDESC</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>results</code> is an array of result descriptors, one for each object
+whose deletion was requested in the original <code>put</code> message.  These
+result descriptors take the form documented above in the description of
+the <code>put</code> request.</li>
+
+<li><code>tag</code> echoes the tag from the <code>put</code> request, if
+there was one, or will be omitted if the original <code>put</code> also
+omitted it.</li>
+</ul>
+
+
+<h2>Admin Protocol</h2>
+
+<p>The Repository admin protocol is used to administer the Repository server.
+
+<h3>reinit</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"reinit" }
+</code></div>
+
+<p>This message instructs the Repository to reinitialize itself.
+
+<h3>shutdown</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"shutdown" kill:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Repository to shut itself down.
+
+<p>where:
+
+<ul>
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination of the server.  Normally, a server will empty its message queues,
+checkpoint any active state, and perform an orderly shutdown.  However, if
+the <code>kill</code> flag is true, it will exit immediately without stopping
+to clean things up.  The value defaults to false if the parameter is
+omitted.</li>
+</ul>
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,849 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Server Configuration Property Reference</h1></div>
+</div>
+
+<div id="main">
+
+<h1>Elko Server Configuration Property Reference</h1>
+
+<h2>Introduction</h2>
+
+<p>In the descriptions of the properties and their values below, Courier
+font <code>like this</code> denotes literal entities and italics <i><code>like
+this</code></i> denotes meta-symbols.
+
+<p>There are three data types used for property values.  Each has been assigned
+a three letter abbreviation:
+
+<blockquote>
+<table>
+<tr>
+<td><i>str</i></td>
+<td class="gap">A string</td>
+</tr>
+<tr>
+<td><i>int</i></td>
+<td class="gap">An integer numeric value</td>
+</tr>
+<tr>
+<td><i>flg</i></td>
+<td class="gap">A boolean flag; may take the values <code>true</code>
+or <code>false</code>.</td>
+</tr>
+<tr>
+<td><i>---</i></td>
+<td class="gap">Used in descriptions of "families" of properties</td>
+</tr>
+</table>
+</blockquote>
+
+<p>The underlying property mechanism can also handle floating point values but
+this feature is not currently used by any of the servers.
+
+<h2>The Properties</h2>
+
+<h3>Meta symbols</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><code><i>N</i></code></td>
+<td class="gap">
+A small integer or the empty string, used in the construction of property names
+for describing network listeners or remote hosts to connect to.  The integer is
+suffixed to the property root name and treated as if it were an array index or
+subscript.
+</td></tr>
+
+<tr valign="top">
+<td><code><i>HostSpec</i></code></td>
+<td class="gap">
+A family of properties that describe a host to be connected to for some
+purpose. The names given here are suffixed to a root name to form the actual
+property name to be set. The root name determines what the host information
+will be used for.
+
+<blockquote>
+<table>
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.host</code></td>
+<td class="gap">Host name or dotted-quad IP address, optionally followed by a
+<code>:</code> and the port number.  If the port number is unspecified, a
+default port may be used, but what the default is depends on the context.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.protocol</code></td>
+<td class="gap">Specifies the protocol to be used for connecting to the
+host. Currently valid values are <code>"tcp"</code> (the default)
+or <code>"http"</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code><i>AuthSpec</i></code></td>
+<td class="gap">The authorization parameters required to connect to this host.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>.dontlog</code></td>
+<td class="gap">If <code>true</code>, don't include message traffic to and from
+this host in the server's log, even if message logging is turned on in general.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>.retry</code></td>
+<td class="gap">Certain kinds of host connections (such as connections to a
+broker) will be repeatedly retried if the initial connection attempt
+fails. This property sets the retry interval (i.e., how long to wait before
+trying again).  The default is 15 seconds.
+</td>
+</tr>
+</table>
+</blockquote>
+
+</td>
+</tr>
+
+<tr valign="top">
+<td><code><i>AuthSpec</i></code></td>
+<td class="gap">
+A family of properties that describe the authorization parameters necessary to
+connect to a host, either from the perspective of the host itself (i.e., what
+it is looking for in a connection authorization attempt) or from the
+perspective of a client (i.e., what the host wants to be given).
+
+<blockquote>
+<table>
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.auth.mode</code></td>
+<td class="gap">Authorization mode to use. Valid values vary depending on the
+type of server this is: for most servers, acceptable values
+are <code>"open"</code> (meaning no authorization required)
+or <code>"password"</code> (meaning that a password is required); for the
+Context Server, valid values are <code>"open"</code>
+or <code>"reservation"</code> (meaning that reservations are required for user
+entry). In all cases <code>"open"</code> is the default.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.auth.code</code></td>
+<td class="gap">Authorization information as required by whatever setting was
+given for the <code>.auth.mode</code> property.  Currently, the only
+authorization mode that uses this property is <code>"password"</code>, in which
+case this property contains the password.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.auth.id</code></td>
+<td class="gap">Authorization ID to use.  What value goes here depends on the
+authorization mode being used, though typically this value is dynamic rather
+than being configured via properties.
+</td>
+</tr>
+</table>
+</blockquote>
+
+</td>
+</tr>
+
+<tr valign="top">
+<td><code><i>LocalObjStoreSpec</i></code></td>
+<td class="gap">A family of properties that configure a local object
+store. This is the local implementation of the Elko object database
+interface that is used by Repositories and by repository clients (right now the
+Context Server and Gatekeeper) that aren't using a remote Repository.
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.objstore</code></td>
+<td class="gap">Fully qualified class name of the Java class implementing the
+<code>org.elkoserver.objdb.store.ObjectStore</code> interface.  The remaining
+repository properties depend on what implementation class is selected.
+</td>
+</tr>
+
+</table>
+<p>when <code><i>root</i>.objstore</code>
+is <code>"org.elkoserver.objdb.store.filestore.FileObjectStore"</code>:<p>
+<table>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.odb</code></td>
+<td class="gap">Pathname, relative to the server's current working directory,
+of the directory containing the files holding the database objects (in simpler
+terms, the "object database directory").
+</td>
+</tr>
+</table>
+</blockquote>
+
+</td>
+</tr>
+
+<tr valign="top">
+<td><code><i>ReposSpec</i></code></td>
+<td class="gap">A family of properties that configure access to repository
+services, either via a local object database or by connecting to a remote
+Repository.
+
+<blockquote>
+<p>for all repositories:<p>
+
+<table>
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.classdesc</code></td>
+<td class="gap">Optional list of object ID strings for class descriptor objects
+that should be loaded when the repository is opened (these are in addition to
+the default class descriptor object named <code>"classes"</code>, which is
+always loaded regardless of the setting of this property). Multiple IDs may be
+separated by <code>:</code>.
+</td>
+</tr>
+</table>
+
+<p>for local repositories only:<p>
+
+<table>
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code><i>LocalObjStoreSpec</i></code></td>
+<td class="gap">Configuration of local object store, in the case where a
+Repository is not being used.
+</td>
+</tr>
+</table>
+
+<p>for remote repositories only:<p>
+
+<table>
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>.repository.<i>HostSpec</i></code></td>
+<td class="gap">Host info indicating what Repository to connect to. These
+properties should be set if you are configuring the Repository connection
+manually (i.e., without using a Broker).
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.repository.service</code></td>
+<td>Label of repository to ask the Broker for.  This will be concatenated to
+the string <code>"rep/rep/"</code> to form the full service name that will be
+sought from the Broker (i.e., if you set this property to <code>"foo"</code>,
+the Broker will be asked for the service <code>"rep/rep/foo"</code>).
+Alternatively, the value <code>"any"</code> will cause the requested service
+name to be <code>"rep/rep"</code>, which will seek any Repository known to the
+Broker.
+</td>
+</tr>
+</table>
+</blockquote>
+
+</td>
+</tr>
+</table>
+</blockquote>
+
+
+<h3>General properties (used in all or most servers)</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.comm.httptimeout</code></td>
+<td class="gap">Timeout, in seconds, for HTTP connections that are still
+waiting for a message from the user's browser to keep the session alive.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.comm.httptimeout.debug</code></td>
+<td class="gap">Alternate value for above when a user logs in in debug mode.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.comm.httpselectwait</code></td>
+<td class="gap">Timeout, in seconds, to wait on open HTTP message select before
+replying with a keep-alive message.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.comm.httpselectwait.debug</code></td>
+<td class="gap">Alternate value for above when a user logs in in debug mode.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.comm.jsonstrictness</code></td>
+<td class="gap">If <code>true</code> (defaults to <code>false</code>), JSON
+literals will be generated according to "strict" JSON rules, meaning that
+property names will be in the form of strings and "<code>/</code>" characters
+in string literals will be escaped; this is safer for the browser but somewhat
+wasteful of bandwidth and really hard on the eyes.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.load.time</code></td>
+<td class="gap">Sampling interval, in seconds, for measuring server load.  The
+default is 300 (i.e., 5 minutes).
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.load.log</code></td>
+<td class="gap">If <code>true</code> (defaults to <code>false</code>), directs
+server to write load reports to the server log. This is in addition to
+reporting the load to the Broker and/or Directors.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.msgdiagnostics</code></td>
+<td class="gap">If <code>true</code>, any message handler methods that return
+an error result will cause a diagnostic message to be sent to the client who
+sent the offending message. If <code>false</code> (the default), such errors
+will not be reported to the client (though they will be reported in the server
+log).
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.debugsessions</code></td>
+<td class="gap">If <code>true</code>, HTTP session IDs are generated by an
+incrementing counter, making them predictable to aid in debugging using static
+scripts. If <code>false</code> (the default), session IDs are geerated using
+the secure random number generator, making them securely unguessable.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>conf.<i>ServerType</i>.service</code></td>
+<td class="gap">Label for services offered by this server, to distinguish it
+from other servers of the same type.  This will be concatenated to the service
+names that this server will be registering with the Broker (which vary
+depending on what type of server this server is).  Default is the empty string,
+i.e., no label.
+
+<blockquote>
+<p>Note: these are the service names used by the current family of servers:<p>
+<table>
+<tr valign="top">
+<td><code>broker/admin</code></td>
+<td class="gap">Broker administrative port</td>
+</tr>
+
+<tr valign="top">
+<td><code>broker/client</code></td>
+<td class="gap">Broker client port (to request service info about other servers
+or to register your own service info for others to see)</td>
+</tr>
+
+<tr valign="top">
+<td><code>context/user</code></td>
+<td class="gap">Context Server user port (for client connections)</td>
+</tr>
+
+<tr valign="top">
+<td><code>director/admin</code></td>
+<td class="gap">Director administrative port</td>
+</tr>
+
+<tr valign="top">
+<td><code>director/provider</code></td>
+<td class="gap">Director provider port (for providers being managed)</td>
+</tr>
+
+<tr valign="top">
+<td><code>director/user</code></td>
+<td class="gap">Director user port (for requesting reservations)</td>
+</tr>
+
+<tr valign="top">
+<td><code>gatekeeper/admin</code></td>
+<td class="gap">Gatekeeper administrative port</td>
+</tr>
+
+<tr valign="top">
+<td><code>gatekeeper/user</code></td>
+<td class="gap">Gatekeeper user port (to request reservations)</td>
+</tr>
+
+<tr valign="top">
+<td><code>rep/admin</code></td>
+<td class="gap">Repository administrative port</td>
+</tr>
+
+<tr valign="top">
+<td><code>rep/rep</code></td>
+<td class="gap">Repository object database services port</td>
+</tr>
+</table>
+</blockquote>
+
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>conf.<i>ServerType</i>.name</code></td>
+<td class="gap">Name for this server, to be used in log reports by Broker and
+Directors.
+
+<blockquote>
+where <code><i>ServerType</i></code> varies depending on what type of server
+you are setting the above two properties for:<p>
+<table>
+<tr><td><code>broker</code></td><td class="gap">Broker</td></tr>
+<tr><td><code>context</code></td><td class="gap">Context Server</td></tr>
+<tr><td><code>director</code></td><td class="gap">Director</td></tr>
+<tr><td><code>gatekeeper</code></td><td class="gap">Gatekeeper</td></tr>
+<tr><td><code>repository</code></td><td class="gap">Repository</td></tr>
+</table>
+</blockquote>
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.broker.<i>HostSpec</i></code></td>
+<td class="gap">Host info indicating what Broker to connect to. If not
+specified, no Broker will be used.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.listen<i>N</i>.<i>ListenSpec</i></code></td>
+<td class="gap">Info configuring the <code><i>N</i></code>th listener port for
+this server. <code><i>N</i></code> should follow a strict sequence, starting
+with the null string and the incrementing from 1 (with no gaps) for each
+successive listener configured.  Where:
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><code><i>ListenSpec</i></code></td>
+<td class="gap">
+A family of properties that configure a listener port.
+
+<blockquote>
+<table>
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.host</code></td>
+<td class="gap">Host name and optional colon-separated port number that the
+server should listen for connections on. If no port number is specified, an
+arbitrary, operating system assigned port will be used.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.bind</code></td>
+<td class="gap">Host name and optional colon-separated port number to actually
+bind the listener to, if this is different from the <code>.host</code> property
+(necessary sometimes due to firewalls and NAT).
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.protocol</code></td>
+<td class="gap">Protocol to expect connecting clients to use.  Valid values are
+<code>"tcp"</code> (the default) or <code>"http"</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code><i>AuthSpec</i></code></td>
+<td class="gap">Optional authorization information to require connecting
+clients to use.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.allow</code></td>
+<td class="gap">A comma-separated list of the kinds of connections that are
+allowed on this port. Valid values depend on what sort of server this is:
+<blockquote>
+Broker: <code>"client"</code> or <code>"admin"</code><br>
+Gatekeeper: <code>"user"</code> or <code>"admin"</code><br>
+Repository: <code>"rep"</code> or <code>"admin"</code><br>
+Director: <code>"user"</code>, <code>"provider"</code> or <code>"admin"</code>
+</blockquote>
+In all cases, the value <code>"any"</code> is also valid and indicates that any
+sort of connection is allowed.  The default is that no types of connections are
+allowed, which is almost certainly not what you want.  Also,
+these <code>.allow</code> settings do not pertain to the Context Server, which
+only accepts one sort of connection.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>.secure</code></td>
+<td class="gap">If <code>true</code>, listen for an SSL connection on this
+port. Defaults to <code>false</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>.dontlog</code></td>
+<td class="gap">If <code>true</code>, don't include message traffic to and from
+connections made to this port, even if message logging is turned on in general.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.root</code></td>
+<td class="gap">URL root for HTTP tunneling.</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>.domain</code></td>
+<td class="gap">Domain setting to be used on http connections to bypass browser
+'same site' restrictions.
+</td>
+</tr>
+
+</table>
+</blockquote>
+
+</td>
+</tr>
+</table>
+</blockquote>
+
+</td>
+</tr>
+</table>
+</blockquote>
+
+<h3>Trace control properties (used everywhere)</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>tracelog_dir</code></td>
+<td class="gap">Directory in which log files will go. Defaults
+to the current working directory.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>tracelog_tag</code></td>
+<td class="gap">Base string for synthesizing log file names. Defaults to
+<code>"log"</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>tracelog_name</code></td>
+<td class="gap">Name of log file. Overrides <code>tracelog_dir</code>
+and <code>tracelog_tag</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>tracelog_size</code></td>
+<td class="gap">Size, in bytes, after which the log file will be rolled over to
+a new file.  Defaults to 500000; may not be set to lower than 1000.
+Alternatively, the value <code>"unlimited"</code> will inhibit log file
+rollover entirely.  Rolled over log files will be named by concatenating the
+tag string with a date string, unless <code>tracelog_name</code> has been set,
+in which case incrementing integers will be used instead.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>tracelog_backups</code></td>
+<td class="gap">Sets the behavior with respect to log file rollover
+("backups").  If set to <code>"one"</code> or <code>"1"</code>, at most one
+rollover backup will be kept.  If set to <code>"many"</code> (the default),
+backups will simply accumulate.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>tracelog_showverbose</code></td>
+<td class="gap">Controls the verbosity of log file
+entries. If <code>true</code>, log entries will include the name of the trace
+subsystem generating the entry and the class name, method, and line number
+whence the entry is being requested.  Default is <code>false</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>trace_<i>Subsystem</i></code></td>
+<td class="gap">Sets the tracing level for a given subsystem. This is the level
+of severity necessary for a message to actually be written to the log file.
+Valid values are: <code>"ERROR"</code>, <code>"WARNING"</code>,
+<code>"USAGE"</code>, <code>"WORLD"</code>, <code>"EVENT"</code>,
+<code>"DEBUG"</code> and <code>"VERBOSE"</code>, in increasing order of
+spamminess.
+
+<blockquote>
+where <code><i>Subsystem</i></code> is one of the currently recognized
+subsystems:<p>
+<table>
+<tr><td><code>comm</code></td><td class="gap">network communications subsystem</td></tr>
+<tr><td><code>msgs</code></td><td class="gap">JSON message handling subsystem</td></tr>
+<tr><td><code>runq</code></td><td class="gap">event run queue subsystem</td></tr>
+<tr><td><code>startup</code></td><td class="gap">server initialization subsystem</td></tr>
+<tr><td><code>timers</code></td><td class="gap">timer events subsystem</td></tr>
+<tr><td><code>trace</code></td><td class="gap">trace subsystem</td></tr>
+<tr><td><code>brok</code></td><td class="gap">Broker application</td></tr>
+<tr><td><code>cont</code></td><td class="gap">Context Server application</td></tr>
+<tr><td><code>dire</code></td><td class="gap">Director application</td></tr>
+<tr><td><code>gate</code></td><td class="gap">Gatekeeper application</td></tr>
+<tr><td><code>repo</code></td><td class="gap">Repository application</td></tr>
+</table>
+<p>Application Java code can also define new trace subsystems, which can add to
+this list.  See the JavaDoc for
+the <code>org.elkoserver.util.trace.Trace</code> class.
+</blockquote>
+</td>
+</tr>
+
+</table>
+</blockquote>
+
+
+<h3>Repository properties</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.repository.<i>LocalObjStoreSpec</i></code></td>
+<td class="gap">Configures the object store implementation to be used by this
+Repository.
+</td>
+</tr>
+
+</table>
+</blockquote>
+
+
+<h3>Director properties</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.director.providerlimit</code></td>
+<td class="gap">Sets the maximum number of providers (e.g., Context Servers)
+that may connect to this Director.
+</td>
+</tr>
+
+</table>
+</blockquote>
+
+
+<h3>Gatekeeper properties</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.gatekeeper.director.<i>HostSpec</i></code></td>
+<td class="gap">Host info indicating what Director to connect to. These
+properties should be set if you are configuring the Director connection
+manually (i.e., without using a Broker).
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.gatekeeper.director.auto</code></td>
+<td class="gap">If <code>true</code>, indicates that the Director to connect to
+should be obtained automatically from the Broker.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.gatekeeper.actiontimeout</code></td>
+<td class="gap">Time, in seconds, after which user connections will be
+terminated if they have not done anything.  Default is 15 seconds.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>conf.gatekeeper.authorizer</code></td>
+<td class="gap">Fully qualified class name of the Java class implementing the
+<code>org.elkoserver.server.gatekeeper.Authorizer</code> interface.
+</td>
+</tr>
+</table>
+
+<p>when <code>conf.gatekeeper.authorizer</code> is
+  <code>"org.elkoserver.server.gatekeepwer.passwd.PasswdAuthorizer"</code>:<p>
+
+<table>
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>conf.gatekeeper.idbase</code></td>
+<td class="gap">Base ID string for synthesized user IDs.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.gatekeeper.anonymous</code></td>
+<td class="gap">If <code>true</code>, allow anonymous users to request
+reservations. If <code>false</code>, don't. Defaults to <code>true</code>.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.gatekeeper.<i>ReposSpec</i></code></td>
+<td class="gap">Info describing the object store or Repository to use for
+obtaining user authentication and account information.
+</td>
+</tr>
+
+</table>
+</blockquote>
+
+
+<h3>Context Server properties</h3>
+
+<blockquote>
+<table>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.context.reservationexpire</code></td>
+<td class="gap">Time, in seconds, before unredeemed reservations are
+expired. Defaults to 30 seconds.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.context.entrytimeout</code></td>
+<td class="gap">Time, in seconds, that a new user connection has to enter some
+context before being kicked off for inactivity.  Defaults to 15 seconds.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>int</i></td>
+<td class="gap"><code>conf.context.userlimit</code></td>
+<td class="gap">Maximum number of concurrent user connections permitted on this
+server.  A value of 0 (the default) means no limit.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>str</i></td>
+<td class="gap"><code>conf.context.shutdownpassword</code></td>
+<td class="gap">Password that must be given in a JSON <code>shutdown</code>
+message to allow the server to be shutdown.  Default is no password.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.context.<i>ReposSpec</i></code></td>
+<td class="gap">Info describing the object store or Repository to use for
+obtaining and persisting contexts, items and users.
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>---</i></td>
+<td class="gap"><code>conf.register<i>N</i>.<i>HostSpec</i></code></td>
+<td class="gap">Host info indicating the <code><i>N</i></code>th Director to
+register this Context Server with. <code><i>N</i></code> should follow a strict
+sequence, starting with the null string and then incrementing from 1 (with no
+gaps) for each successive Director connection configured. These properties
+should be set if you are configuring the Director connections manually (i.e.,
+without using a Broker).
+</td>
+</tr>
+
+<tr valign="top">
+<td><i>flg</i></td>
+<td class="gap"><code>conf.register.auto</code></td>
+<td class="gap">If <code>true</code>, indicates that the Director(s) to connect
+to should be obtained automatically from the Broker.
+</td>
+</tr>
+
+</table>
+</blockquote>
+
+</div>
+</div>
+</body>
+</html>

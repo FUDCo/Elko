@@ -1,0 +1,583 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Broker Protocols</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Elko Broker Protocols</h1>
+
+<h2>The Broker</h2>
+
+<p>The <em>Broker</em> is an Elko server that allows a cluster of
+Elko servers of various kinds to find out information about each
+other's available services (and thus establish interconnectivity) without
+having to be preconfigured to know about one another.  It also shields the
+various servers from order of startup issues.  Finally, it provides a place to
+stand for monitoring and administering an Elko server farm as a
+whole.
+
+<p>A Broker understands two different JSON message protocols.  These correspond
+to the two kinds of actors who may wish to communicate with a Broker: clients
+offering or seeking services, and administrators.  Each of the ports that a
+Broker listens for connections on can be configured to support either or both
+of these protocols.
+
+<p>Each of these protocols is associated with a particular object ref to which
+messages should be addressed:
+
+<ul>
+<li><code>client</code> for clients (which are typically themselves other kinds
+of servers) seeking or providing services.</li>
+<li><code>admin</code> for administrator messages.</li>
+</ul>
+
+<h2>Common Protocols</h2>
+
+<p>While there are two different message protocols, they share a common set of
+messages pertaining to connection housekeeping.  These messages may be targeted
+at either of the two protocol objects described above.
+
+<h3>auth</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"auth", auth:<i>?AUTHDESC</i>, label:<i>?STR</i>}
+</code></div>
+
+<p>This message begins a new session with the Broker, providing whatever
+authorization credentials as may be appropriate (according to the Broker's
+server configuration) to gain access to services.
+
+<p>An <code>auth</code> message <strong>must</strong> be the first message sent
+to <code>client</code> or <code>admin</code> on any new connection to the
+Broker.  Any other message to these objects will result in immediate
+termination of the connection.
+
+<p>If the <code>auth</code> operation fails, the connection will be terminated
+by the Broker.  Otherwise, the client is thereafter free to send messages
+according to the protocol of the <code><i>REF</i></code> that was authorized.
+
+<ul>
+<li><code>auth</code> is a bundle of authorization information, as described
+below.  The specific authorization information that is relevant depends on the
+configuration of the Broker server port being connected to.  If the
+<code>auth</code> parameter is omitted, an uncontrolled access in
+<em>open</em> mode is assumed.</li>
+
+<li><code>label</code> is an optional label for the connection.  This will be
+used in server log entries for debugging purposes and for identifying the
+connection in administrative requests.</li>
+</ul>
+
+<h4>Authorization information</h4>
+
+<p>The <code>auth</code> parameter of the <code>auth</code> message describes
+a bundle of authorization information to authorize access.  Its general form
+is:<p>
+
+<div class="indent"><code>
+    { type:"auth", mode:<i>STR</i>, code:<i>?STR</i>, id:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>mode</code> is the requested authorization mode.  Currently
+recognized authorization modes are <code>"open"</code> and
+<code>"password"</code>.  Other modes may be relevant in the future or when
+talking to other kinds of servers.</li>
+
+<li><code>code</code> is an authorization code, whose meaning varies depending
+on the authorization mode.  In the case of open mode, it is irrelevant and
+should not be provided.  In the case of password mode, it is a password
+string.</li>
+
+<li><code>id</code> is an optional identity string, whose meaning varies
+depending on the authorization mode.  In the case of open mode, it is
+irrelevant and should not be provided.  In the case of password mode, it may or
+may not be relevant depending on the configuration.</li>
+</ul>
+
+<h3>disconnect</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"disconnect" }
+</code></div>
+
+<p>This message requests the server to terminate its connection to the sender.
+The connection to the server is broken.
+
+<h3>ping</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"ping", tag:<i>?STR</i> }
+</code></div>
+
+<p>This message tests connectivity to the server.
+
+<ul>
+<li><code>tag</code> is an optional string that may be anything of the client's
+choosing.</li>
+</ul>
+
+<p>If the message is successfully received by the server, it will reply
+with:<p>
+
+<div class="indent"><code>
+ &larr; { to:<i>REF</i>, op:"pong", tag:<i>?STR</i> }
+</code></div>
+
+<p>
+<ul>
+<li><code>tag</code> echoes the tag from the <code>ping</code> message, if
+there was one, or will be omitted if the original <code>ping</code> also
+omitted it.</li>
+</ul>
+
+<h3>debug</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"debug", msg:<i>STR</i> }
+</code></div>
+
+<p>This message delivers debugging information to the server.  If the server is
+configured to permit this, the string given in the <code>msg</code> parameter
+will be written to the server's log.  If the server is not configured to permit
+this, this message will simply be ignored.
+
+<h2>Client Protocol</h2>
+
+<p>The Broker client protocol is used by servers that are seeking services from
+other servers, offering services to other servers, or both.
+
+<h3>find</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"find", service:<i>STR</i>, protocol:<i>?STR</i>,
+          wait:<i>?INT</i>, monitor:<i>?BOOL</i>, tag:<i>?STR</i> }
+</code></div>
+
+<p>This message queries the Broker about the availability of some kind of
+service.
+
+<p>where:
+
+<ul>
+<li><code>service</code> is the name of the type of service the requestor
+is seeking.</li>
+
+<li><code>protocol</code> is the name of the communications protocol by which
+the requestor wishes to access the service.  This parameter is optional, and
+defaults to <code>"tcp"</code> if omitted.</li>
+
+<li><code>wait</code> is the time (in seconds) that the requestor is willing
+to wait for the service to become available.  A value of 0 means that the
+requestor is not willing to wait at all.  A negative value means that the
+requestor is willing to wait forever.  This parameter is optional, and
+defaults to 0 (don't wait) if omitted.</li>
+
+<li><code>monitor</code> is a boolean flag indicating that the requestor
+wishes to continue to be aprised of new services of the requested type as they
+become known to the Broker, even after the first reply has been returned.
+This parameter is optional and defaults to false if omitted.  A value of true
+is invalid if the <code>wait</code> parameter was specified with a value of
+0.</li>
+
+<li><code>tag</code> is an optional tag string that, if given, will be sent
+back with the response(s), to help the client match up requests and
+responses.</li>
+</ul>
+
+The Broker will reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"client", op:"find", desc:[<i>SERVICEDESC</i>], tag:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>desc</code> is an array of service descriptors, each of which
+describes one server offering the service being sought in the
+original <code>find</code> request.</li>
+
+<li><code>tag</code> echoes the tag from the <code>find</code> request, if
+there was one, or will be omitted if the original <code>find</code> also
+omitted it.</li>
+</ul>
+
+A service descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"servicedesc", service:<i>STR</i>, hostport:<i>?STR</i>,
+   protocol:<i>?STR</i>, label:<i>?STR</i>, auth:<i>?AUTHDESC</i>,
+   provider:<i>?INT</i>, failure:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>service</code> is the service type name of the service.</li>
+
+<li><code>hostport</code> is a <code>"<i>hostname</i>:<i>portnumber</i>"</code>
+string indicating the host and port at which the service is being
+offered.  This field will be absent if the service was not available.</li>
+
+<li><code>protocol</code> is the name of the communications protocol over which
+the service is being offered.  This field will be absent if the service was
+not available.</li>
+
+<li><code>label</code> is the descriptive label given by the service provider
+when it registered that the service was available.  This will be absent if the
+service was not available or if the service provider did not provide a label
+string (which is optional at the service provider's discretion).</li>
+
+<li><code>auth</code> is an authorization descriptor that indicates how one
+should authorize with the indicated service.  The authorization descriptor is
+exactly as documented above in the description of the <code>auth</code>
+request.  This field will be absent if the service was not available or if the
+service provider did not share authorization information with the broker (in
+the latter case, it is the responsibility of the service requestor and the
+service provider to cooperate out-of-band to coordinate authorization
+arrangements).</li>
+
+<li><code>provider</code> is a simple integer provider ID associated with the
+server providing the service, independent of the particular service(s) being
+offered.  These provider IDs are assigned by the Broker itself.  The provider
+ID enables a client to determine if multiple different services all come from
+the same provider. This field will be absent if the service was not
+available.</li>
+
+<li><code>failure</code> is an error message string indicating the reason why
+the Broker was unable to fulfill the request.  Typically this will be
+<code>"no such service"</code>, though other errors are possible in principle.
+This field will only be present in the event of failure, in which case the
+other optional fields described above will be absent.</li>
+</ul>
+
+If the <code>wait</code> parameter of the original <code>find</code> request
+was 0, the reply will be immediate, delivering either service information or a
+"no such service" failure.  If the <code>wait</code> parameter was non-zero,
+then the Broker will withhold its reply until some service provider contacts
+it offering the service, or the wait period times out, or the Broker becomes
+unable for some other reason to be able to offer service information.
+
+<p>If the <code>monitor</code> parameter of the original <code>find</code>
+request was true (in which case the <code>wait</code> parameter was, by
+definition, non-zero), the Broker will send a new <code>find</code> response
+message each time an additional service provider registers an instance of the
+requested service with the Broker.  This stream of service notifications will
+continue until the requested <code>wait</code> period has elapsed, or
+indefinitely if the <code>wait</code> parameter was negative.
+
+<h3>willserve</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"willserve", services:[<i>SERVICEDESC</i>] }
+</code></div>
+
+<p>This message informs the Broker that the sender is offering to provide one
+or more services.
+
+<p>where:
+
+<ul>
+<li><code>services</code> is an array of one or more service descriptors, each
+of which describes one service that the sender is offering to provide.  The
+service descriptor is as described above in the descripion of the
+<code>find</code> request, except that the client should not provide a
+<code>provider</code> property as this will be assigned by the Broker.  The
+<code>label</code>, <code>auth</code>, and <code>protocol</code> properties
+are optional at the client's discretion, but the <code>service</code> and
+<code>hostport</code> properties are mandatory.</li>
+</ul>
+
+<h3>wontserve</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"wontserve", services:[<i>STR</i>] }
+</code></div>
+
+<p>This message informs the Broker that the sender is ceasing to provide one
+or more services.
+
+<p>where:
+
+<ul>
+<li><code>services</code> is an array of the names of one or more service types
+indicating the services that the client will not be providing.  Note that it is
+not an error for a client to send a <code>wontserve</code> message mentioning
+services that it was not (to the Broker's knowledge) offering in the first
+place.</li>
+</ul>
+
+<h3>load</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"load", factor:<i>FLOAT</i> }
+</code></div>
+
+<p>This message informs the Broker of sender's current load.
+
+<p>where:
+
+<ul>
+<li><code>factor</code> is the sender's current load factor.  This may be any
+value, though all clients talking to a given Broker should all share a single,
+commensurable metric.</li>
+</ul>
+
+<h3>reinit</h3>
+
+<div class="indent"><code>
+ &larr; { to:"client", op:"reinit" }
+</code></div>
+
+<p>This message is a directive from the Broker to the client, instructing the
+client to reinitialize itself.  The exact meaning of "reinitialize" is specific
+to the kind of client it is, but the spirit of the request is that the client
+should restore itself to something resembling the condition it was in when it
+first started up.  In particular, the client can obey this request by shutting
+down, which terminates the connection, restarting, and restablishing its
+relationship with the Broker.
+
+<h3>shutdown</h3>
+
+<div class="indent"><code>
+ &larr; { to:"client", op:"shutdown", kill:<i>?BOOL</i> }
+</code></div>
+
+<p>This message is a directive from the Broker to the client, instructing the
+client to shut itself down.
+
+<p>where:
+
+<ul>
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination.  Normally, the client would empty its message queues, checkpoint
+any active state, and perform an orderly shutdown.  However, if the
+<code>kill</code> flag is true, the client should exit immediately without
+stopping to clean things up.  The value defaults to false if the parameter is
+omitted.</li>
+</ul>
+
+
+<h2>Admin Protocol</h2>
+
+<p>The Broker admin protocol is used to administer the Broker and, indirectly,
+the entire collection of clients it is in contact with.
+
+<h3>loaddesc</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"loaddesc", service:<i>?STR</i> }
+</code></div>
+
+<p>This message requests the Broker to send information about the load of
+registered services.
+
+<p>where:
+
+<ul>
+<li><code>service</code> is the optional name of a service of interest.  If
+this parameter is provided, the reply will deliver load information about
+providers of the named service.  If it is omitted, the reply will deliver load
+information about all service providers that the Broker knows about.</li>
+</ul>
+
+The Broker will reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"loaddesc", desc:[<i>LOADDESC</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>desc</code> is an array of load descriptors, each of which
+describes the load associated with one service provider.  If there are no
+providers of the requested service, this array will be empty.</li>
+</ul>
+
+A load descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"loaddesc", label:<i>?STR</i>, load:<i>FLOAT</i>, provider:<i>INT</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>label</code> is a printable label for the service provider being
+described.  This field will be absent if the service provider did not label
+itself.</li>
+
+<li><code>load</code> is the provider server's most recently reported load
+factor.</li>
+
+<li><code>provider</code> is the provider ID associated with the server
+providing the service.</li>
+</ul>
+
+<h3>reinit</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"reinit", server:<i>?STR</i>,
+          self:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Broker to reinitialize zero or more of the
+provider servers it knows about and, optionally, itself.
+
+<p>where:
+
+<ul>
+<li><code>server</code> is the optional label for a provider server to be
+reinitialized.  Alternatively, the string <code>"all"</code> indicates that all
+provider servers that the Broker knows about are to be reinitialized.  If
+omitted, no provider servers will be reinitialized.</li>
+
+<li><code>self</code> is an optional flag that if true directs that the
+Broker itself also be reinitialized.  The value defaults to false if the
+parameter is omitted.  Broker reinitialization, if requested, will take place
+after any provider server reinitializations.</li>
+</ul>
+
+If any provider servers are to be reinitialized, each will be sent a
+corresponding <code>reinit</code> message (see client message descriptions
+above) on its client connection.
+
+<h3>servicedesc</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"servicedesc", service:<i>?STR</i> }
+</code></div>
+
+<p>This message requests the Broker to send information about currently
+registered services.
+
+<p>where:
+
+<ul>
+<li><code>service</code> is the optional name of a type of service of interest.
+If this is provided, the reply will deliver information about providers of the
+named service.  If it is omitted, the reply will deliver information about all
+service providers that the Broker knows about.</li>
+</ul>
+
+The Broker will reply with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"servicedesc", desc:[<i>SERVICEDESC</i>], on:BOOL }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>desc</code> is an array of service descriptors, each of which
+describes one service being offered by some service provider client.  The
+service descriptors are exactly as described above in the discussion of
+the <code>find</code> request.</li>
+
+<li><code>on</code> is a boolean flag indicating whether the service described
+is currently being offered.  In the reply to the <code>servicedesc</code>
+request, this flag will always be true, as this reply only describes services
+that are actually being offered.  However, this message is also used when
+watching services via the <code>watch</code> request, described below, which
+will also deliver notifications about services ceasing to be offered.</li>
+</ul>
+
+<h3>shutdown</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"shutdown", server:<i>?STR</i>,
+          self:<i>?BOOL</i>, kill:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Broker to shut down zero or more of the provider
+servers it knows about and, optionally itself.
+
+<p>where:
+
+<ul>
+<li><code>server</code> is the optional label for a provider server to be shut
+down.  Alternatively, the string <code>"all"</code> indicates that all
+provider servers that the Broker knows about are to be shut down.  If this
+parameter is omitted, no provider servers will be shut down.</li>
+
+<li><code>self</code> is an optional flag that if true directs that the Broker
+itself also be shut down.  The value defaults to false if the parameter is
+omitted.  Broker shutdown, if requested, will take place after any provider
+server shutdowns.</li>
+
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination of the indicated server(s).  Normally, servers will empty their
+message queues, checkpoint any active state, and perform an orderly shutdown.
+However, if the <code>kill</code> flag is true, they will exit immediately
+without stopping to clean things up.  The value defaults to false if the
+parameter is omitted.</li>
+</ul>
+
+If any provider servers are to be shut down, each will be sent a corresponding
+<code>shutdown</code> message (see client message descriptions above) on its
+client connection.
+
+<h3>watch</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"watch", services:<i>?BOOL</i>, load:<i>?BOOL</i> }
+</code></div>
+
+<p>This message requests the Broker to begin or cease providing ongoing updates
+as to the status of registered client service providers.
+
+<p>where:
+
+<ul>
+<li><code>services</code> is an optional boolean flag indicating whether the
+sender wants to be notified about services coming or going.  A value of true
+indicates that the sender wishes to begin receiving such notifications.  A
+value of false indicates that the sender wishes to cease receiving such
+notifications.  If this parameter is omitted, the Broker's current send/don't
+send setting for service notifications will be left unchanged.</li>
+
+<li><code>load</code> is an optional boolean flag indicating whether the
+sender wants to be receive load factor updates for service providers that the
+Broker knows about.  A value of true indicates that the sender wishes to begin
+receiving such notifications.  A value of false indicates that the sender
+wishes to cease receiving such notifications.  If omitted, the Broker's
+current send/don't send setting for load notifications will be left
+unchanged.</li>
+</ul>
+
+If the <code>services</code> flag is true, the admin client will be sent
+a <code>servicedesc</code> message each time the Broker is notified by a
+service provider client about a service being offered or withdrawn.  This
+message is exactly as described in the response to the
+admin <code>servicedesc</code> request above.
+
+<p>If the <code>load</code> flag is true, the admin client will be sent
+a <code>loaddesc</code> message each time the Broker is notified by a service
+provider client about a load change.  This message is exactly as described in
+the response to the admin <code>loaddesc</code> request above.
+
+<p>Although both the <code>services</code> and <code>load</code> parameters
+are optional, in practice at least one of these parameters should be provided,
+as the request is otherwise a no-op.
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: JSON Messaging over HTTP</h1></div>
+</div>
+
+<div id="main">
+
+<h1>JSON Messaging Over HTTP</h1>
+
+<p><a href="jmsg.html">JSON Messaging</a> is a set of conventions for using
+JSON to encode a bidirectional object-to-object message connection between two
+machines.  The underlying transport abstraction assumed is that of TCP: a
+simple, persistent, bidirectional communications pipe.  However, various
+practicalities, notably the desire to enable unmodified web browsers to act as
+clients, dictate that we be able to use HTTP as the underlying transport layer.
+
+<p>Since HTTP is stateless and sessionless, an additional transport protocol is
+required when the message transport medium is HTTP.  This protocol uses special
+URLs and additional JSON encoding within the HTTP request and reply bodies to
+efficiently synthesize a sessionful, symmetric, bidirectional, asynchronous
+message channel out of an ongoing series of transient, asymmetric, synchronous,
+RPC-style HTTP requests.  This document describes the details of this transport
+protocol.
+
+<h2>Client Connection</h2>
+
+<code>GET <i>ROOT</i>/connect</code><br>
+&nbsp;&nbsp;&nbsp;or<br>
+<code>GET <i>ROOT</i>/connect/<i>RANDOMSTUFF</i></code>
+
+<p>This initiates a new application-level session.
+
+<ul>
+<li><code><i>ROOT</i></code> is the configured URL root.  This is typically
+  something like <code>http://foonbat.example.com:8001/tst</code>, where the
+  protocol, host domain, host port, and URI prefix are all part of the server's
+  configuration.</li>
+
+<li><code><i>RANDOMSTUFF</i></code> is any random text the browser wishes to
+  suffix so as to make the URL unique, in the interest of defeating
+  misconfigured caching. This text is ignored by the server.</li>
+</ul>
+
+<p>The HTTP reply body contains the JSON:<p>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        sessionid: <i>SESSIONID</i><br>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>sessionid</code> is the server-assigned browser session ID. This is
+  an unguessable token assigned by the server to the connection.  It will be
+  used in the construction of further request URLs for operations associated
+  with the session.  <code><i>SESSIONID</i></code> is a string literal.</li>
+  </ul>
+
+<h2>Server to Client Messaging</h2>
+
+<code>GET <i>ROOT</i>/select/<i>SESSIONID</i>/<i>SSEQNUM</i></code>
+
+<p>This is a poll for messages from the server to the client.  (Actually, it
+is more like Unix's <code>select()</code> combined with <code>read()</code>).
+
+<ul>
+<li><code><i>SESSIONID</i></code> is the session ID, assigned by the server in
+  response to the <code>/connect/</code> request.</li>
+
+<li><code><i>SSEQNUM</i></code> is a sequence number that enables the client to
+  cope with message ordering in an asynchronous environment.  The server
+  assigns these in sequential, increasing order.  <code><i>SSEQNUM</i></code>
+  should be the value of the <code>seqnum</code> property that was returned in
+  the reply to the most recent previous <code>/select/</code> request, or
+  <code>1</code> if there have not yet been any <code>/select/</code> requests
+  sent for this session.</li>
+
+</ul>
+
+<p>The HTTP reply body contains the JSON:
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        msgs: [<i>MSG</i>, <i>MSG</i>, ...],<br>
+        seqnum: <i>NEWSSEQNUM</i><br>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>msgs</code> is an array of zero or more JSON message objects.  If the
+  server has no messages to report, it may, at its option, omit the
+  <code>msgs</code> property entirely, rather than sending a zero-length array.
+  Each <code><i>MSG</i></code> is a normal <a href="jmsg.html">JSON message
+  object</a>.</li>
+
+<li><code>seqnum</code> is the sequence number to use for the next
+  <code>/select/</code> request associated with this session.
+  <code><i>NEWSSEQNUM</i></code> is a string literal.</li>
+</ul>
+
+
+<h2>Client to Server Messaging</h2>
+
+<code>POST <i>ROOT</i>/xmit/<i>SESSIONID</i>/<i>XSEQNUM</i></code>
+
+<p>This is a delivery of one or more messages from the client to the server.
+
+<p>The messages are transmitted, in the form of sequential JSON message
+literals, as the HTTP request body.
+
+<ul>
+<li><code><i>XSEQNUM</i></code> is a sequence number that enables the server to
+  deal with dropped, repeated, or out-of-order messages.  The server assigns
+  these in increasing order.  <code><i>XSEQNUM</i></code> should be the value
+  of the <code>seqnum</code> property that was returned in the reply to the
+  most recent previous <code>/xmit/</code> request, or <code>1</code> if there
+  have not yet been any <code>/xmit/</code> requests sent for this
+  session.</li>
+
+</ul>
+
+<p>The HTTP reply body contains the JSON:
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        seqnum: <i>NEWXSEQNUM</i>,<br>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>seqnum</code> is the sequence number to use for the next
+  <code>/xmit/</code> request associated with this session.
+  <code><i>NEWXSEQNUM</i></code> is a string literal.</li>
+</ul>
+
+
+<h2>Client Disconnection</h2>
+
+<code>GET <i>ROOT</i>/disconnect/<i>SESSIONID</i></code>
+
+<p>This terminates an application level session.
+
+<p>The HTTP reply body contains the JSON:
+
+<div class="indent"><code>
+    {<br>
+    }
+</code></div>
+<p>
+
+<h2>Errors</h2>
+
+<p>Sometimes the browser may become confused (due to browser bugs, for example)
+about the appropriate URL to use for sending or receiving messages. In such a
+case, it may send an inappropriate HTTP request to the server that will contain
+an invalid sequence number or session ID.
+
+<p>In the case of such an error, the server will respond with the reply:
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        error: <i>ERRORNAME</i><br>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code><i>error</i></code> is a string that depends on the nature of the
+error. It will be one of the strings <code>"sessionIDError"</code> or
+<code>"sequenceError"</code>, depending on which part of the requested URL was
+wrong.</li>
+</ul>
+
+</div>
+</div>
+</body>
+</html>

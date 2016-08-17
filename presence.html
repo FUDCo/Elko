@@ -1,0 +1,500 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Presence Server Protocols</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Elko Presence Server Protocols</h1>
+
+<h2>The Presence Server</h2>
+
+<p>The <em>Presence Server</em> is an Elko server that keeps
+track of the context presence (and, optionally, the physical position) of users
+connected to the various Context Servers.  Context Servers may subscribe on
+their users' behalf to be notified about changes in other users' status, with
+these notifications being distributed according to interests derived from the
+subscribing users' social graphs.  The Presence Server in turn gets social
+graph information via an external interface that allows applications to provide
+their own abstractions for social graph connectivity.
+
+<p>The Presence Server can also act as a relay point for propagating messages
+to users according to application-defined criteria, such as external
+identifiers, physical position, or social graph connectivity.  These messages
+may originate from within the complex of Context Servers or from external event
+feeds.
+
+<p>A Presence Server understands two different JSON message protocols.  These
+correspond to the two kinds of actors who may wish to communicate with a
+Presence Server: clients (usually Context Servers) providing and subscribing to
+presence information, and administrators.  Each of the ports that a Presence
+Server listens for connections on can be configured to support either or both
+of these protocols.
+
+<p>Each of these protocols is associated with a particular object ref to which
+messages should be addressed:
+
+<ul>
+<li><code>client</code> for clients providing and seeking presence
+information.</li>
+<li><code>admin</code> for administrator messages.</li>
+</ul>
+
+<h2>Common Protocols</h2>
+
+<p>While there are two different message protocols, they share a common set
+of messages pertaining to connection housekeeping.  These messages may be
+targeted at either of the two protocol objects described above.
+
+<a name="auth"></a><h3>auth</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"auth", auth:<i>?AUTHDESC</i>, label:<i>?STR</i>}
+</code></div>
+
+<p>This message begins a new session with the Presence Server, providing
+whatever authorization credentials as may be appropriate (according to the
+Presence Server's server configuration) to gain access to services.
+
+<p>An <code>auth</code> message <strong>must</strong> be the first message sent
+to <code>client</code>, or <code>admin</code> on any new connection to the
+Presence Server.  Any other message to these objects will result in immediate
+termination of the connection.
+
+<p>If the <code>auth</code> operation fails, the connection will be terminated
+by the Presence Server.  Otherwise, the client is thereafter free to send
+messages according to the protocol of the <code><i>REF</i></code> that was
+authorized.
+
+<ul>
+<li><code>auth</code> is a bundle of authorization information, as described
+below.  The specific authorization information that is relevant depends on the
+configuration of the Presence Server server port being connected to.  If the
+<code>auth</code> parameter is omitted, an uncontrolled access in
+<em>open</em> mode is assumed.</li>
+
+<li><code>label</code> is an optional label for the connection.  This will be
+used in server log entries for debugging purposes and for identifying the
+connection in administrative requests.</li>
+</ul>
+
+<h4>Authorization information</h4>
+
+<p>The <code>auth</code> parameter of the <code>auth</code> message describes
+a bundle of authorization information to authorize access.  Its general form
+is:<p>
+
+<div class="indent"><code>
+    { type:"auth", mode:<i>STR</i>, code:<i>?STR</i>, id:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>mode</code> is the requested authorization mode.  Currently
+recognized authorization modes are <code>"open"</code> and
+<code>"password"</code>.  Other modes may be relevant in the future or when
+talking to other kinds of servers.</li>
+
+<li><code>code</code> is an authorization code, whose meaning varies depending
+on the authorization mode.  In the case of open mode, it is irrelevant and
+should not be provided.  In the case of password mode, it is a password
+string.</li>
+
+<li><code>id</code> is an optional identity string, whose meaning varies
+depending on the authorization mode.  In the case of open mode, it is
+irrelevant and should not be provided.  In the case of password mode, it may or
+may not be relevant depending on the configuration.</li>
+</ul>
+
+<h3>disconnect</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"disconnect" }
+</code></div>
+
+<p>This message requests the server to terminate its connection to the sender.
+The connection to the server is broken.
+
+<h3>ping</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"ping", tag:<i>?STR</i> }
+</code></div>
+
+<p>This message tests connectivity to the server.
+
+<ul>
+<li><code>tag</code> is an optional string that may be anything of the client's
+choosing.</li>
+</ul>
+
+<p>If the message is successfully received by the server, it will reply
+with:<p>
+
+<div class="indent"><code>
+ &larr; { to:<i>REF</i>, op:"pong", tag:<i>?STR</i> }
+</code></div>
+
+<p>
+<ul>
+<li><code>tag</code> echoes the tag from the <code>ping</code> message, if
+there was one, or will be omitted if the original <code>ping</code> also
+omitted it.</li>
+</ul>
+
+<h3>debug</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"debug", msg:<i>STR</i> }
+</code></div>
+
+<p>This message delivers debugging information to the server.  If the server is
+configured to permit this, the string given in the <code>msg</code> parameter
+will be written to the server's log.  If the server is not configured to permit
+this, this message will simply be ignored.
+
+<h2>Client Protocol</h2>
+
+<p>The Presence Server client protocol is used by a Context Server in order
+both to inform the Presence Server of changes in the status of users hosted by
+that Context Server and to request information about the status of users hosted
+by other Context Servers.
+
+<h3>user</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"user", context:<i>CONTEXTREF_STR</i>,
+          user:<i>USERREF_STR</i>, on:<i>BOOL</i> }
+</code></div>
+
+<p>This message informs the Presence Server of a user arriving in or departing
+from a context hosted by the sender.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context that the user entered or
+exited.</li>
+
+<li><code>user</code> is the ref of the user who entered or exited.</li>
+
+<li><code>on</code> is a flag that is true the user entered, false if the user
+exited.</li>
+</ul>
+
+<h3>subscribe</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"subscribe", context:<i>STR</i>,
+          domains:<i>?</i>[<i>STR</i>], visible:<i>?BOOL</i> }
+</code></div>
+
+<p>This message requests a subscription to notifications about changes in
+users' presence status.  This subscription is requested on behalf of users in
+some context hosted by the requestor.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of a context (hosted by the sender) to
+which notifications should be sent when the presence status of "users of
+interest" changes.  "Users of interest" are any users in the domain-specific
+social graphs of users currently in the named context.</li>
+
+<li><code>domains</code> is an optional array of the names of social graph
+domains of interest.  The set of available social graph domains is
+application-specific, but might represent abstractions such as friends,
+enemies, allies, etc.  If omitted, no notification subscriptions are actuall
+generated and this message serves only to update the visibility status of the
+named context.</li>
+
+<li><code>visible</code> is an optional boolean flag indicating whether users
+in the named context are to be considered visible to users outside the context.
+If true, users in the context are considered present.  If false, it is as if
+user in the context are not online at all.  If omitted, this flag defaults to
+true.</li>
+</ul>
+
+For example, the message:<p>
+
+<div class="indent"><code>
+   { to:"client", op:"subscribe", context:"ctx-foo", domain:["friends"] }
+</code></div>
+
+<p>would be a request to be notified about changes in the presence status of
+the friends of users in the context <code>ctx-foo</code>.
+
+<p>When a subscription is first created, the Presence Server immediately sends
+notification messages to the subscribing Context Server updating it about any
+now relevant presence information.  Thereafter, any time a user enters or
+leaves a context on one of the constellation of Context Servers connected to
+the Presence Server, one or more notifications may be generated announcing this
+information to interested parties.  The form of these notifications is
+described in detail in the section <a href="#notifications">Notifications</a>
+below.
+
+<h3>unsubscribe</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"client", op:"unsubscribe", context:<i>STR</i> }
+</code></div>
+
+<p>This message requests the Presence Server to cancel a notification
+subscription established by an earlier <code>subscribe</code> request.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the context ref of the context that is no longer
+interested in receiving presence status updates for its users.  The indicated
+context is also then considered to no longer be visible.</li>
+</ul>
+
+<a name="notifications"></a><h2>Notifications</h2>
+
+As the presence of users in different contexts on different users changes, the
+Presence Server sends notification messages to the various Context Servers
+informing them.  There are two different notification messages:
+
+<h3>utog</h3>
+
+<div class="indent"><code>
+ &larr; { to:"client", op:"utog", user:<i>USER_REF</i>, ctx:<i>CONTEXT_REF</i>,
+          on:<i>BOOL</i>, togroup:[<i>DOMAIN_DESC</i>] }
+</code></div>
+
+<p>This message, "user to group", informs a group of users about the change in
+presence status of a single user.
+
+<ul>
+<li><code>user</code> is the user ref of the user whose presence status has
+changed.</li>
+
+<li><code>ctx</code> is the contet ref of the context that the indicated user
+has entered or left</li>
+
+<li><code>on</code> is a boolean flag that, if true, indicates that the user
+entered the context (and is now online), and, if false, indicates that the user
+has exited the context (and is now offline).</li>
+
+<li><code>togroup</code> is an array of descriptors that indicates what users
+need to be informed of this event.  There is one element in this array for each
+relevant social graph domain.</li></ul>
+
+Each domain descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { domain:<i>STR</i>, who:[<i>CTX_DESC</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>domain</code> is the name of the social graph domain being
+described.</li>
+
+<li><code>who</code> is an array of descriptors listing the users, by context,
+who should be informed.  There is one entry in this array of each context
+containing users to be notified.</li></ul>
+
+Each context descriptor in turn takes the form:<p>
+
+<div class="indent"><code>
+ { ctx:<i>CONTEXT_REF</i>, users:[<i>USER_REF</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>ctx</code> is the context ref of a context containing users to be
+informed.</li>
+
+<li><code>users</code> is an array of user refs of users in the given context
+who should be notified.</li>
+</ul>
+
+<h3>gtou</h3>
+
+<div class="indent"><code>
+ &larr; { to:"client", op:"gtou", touser:<i>USER_REF</i>,
+          ctx:<i>CONTEXT_REF</i>, group:[<i>DOMAIN_DESC</i>] }
+</code></div>
+
+<p>This message, "group to user", informs a user about the presence of a group
+of other users.
+
+<ul>
+<li><code>touser</code> is the user ref of the user who is being notified.</li>
+
+<li><code>ctx</code> is the context ref of the context in which the user is
+being notified (since different contexts may subscribe to different social
+graph domains).</li>
+
+<li><code>group</code> is an array of descriptors that indicate which users are
+present and where.  There is one element of this array for each relevant social
+graph domain.</li>
+</ul>
+
+Each domain descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { domain:<i>STR</i>, friends:[<i>FRIEND_DESC</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>domain</code> is the name of the social graph domain being
+described.</li>
+
+<li><code>friends</code> is an array of descriptors listing the presences of
+other users.  There is one entry in this array for each user whose presence is
+being described.</li></ul>
+
+Each friend descriptor in turn takes the form:<p>
+
+<div class="indent"><code>
+ { user:<i>USER_REF</i>, ctx:<i>CONTEXT_REF</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>user</code> is the user ref of a user in the social graph of the user
+being notified (labelled here a "friend" for descriptive convenience, even
+though a given social graph domain can actually encode any sort of
+relationship, not just friendship).</li>
+
+<li><code>ctx</code> is the context ref of the context in which the friend is
+present.  Note that unlike the <code>utog</code> notification, there is no
+online vs. offline presence indicator, as this notification is only ever used
+to describe users who are online.</li></ul>.
+
+
+<h2>Admin Protocol</h2>
+
+<p>The Presence Server admin protocol is used to administer the Presence Server
+itself.
+
+<h3>dump</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"dump", depth:<i>INT</i>, user:<i>?STR</i> }
+</code></div>
+
+<p>This message requests the Presence Server to provide a dump of its current
+set of known presence information to the requesting administrator.
+
+<p>where:
+
+<ul>
+<li><code>depth</code> indicates the depth of detail to provide (see
+below).</li>
+
+<li><code>user</code> optionally limits the scope of the information dumped
+to presence information concerning the particular named user.</li>
+</ul>
+
+The Presence Server will reply  with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"dump", numusers:<i>INT</i>,
+          numpresences:<i>INT</i>,
+          users:[<i>USERDUMP</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>numpresences</code> is the total number of active user presenences
+currently being tracked by the Presence Server.</li>
+
+<li><code>numusers</code> is the number unique users whose presences are
+currently being tracked.</li>
+
+<li><code>users</code> is an array of user dump descriptors, each of
+which describes one user.  This will only be provided if the value of the
+<code>depth</code> parameter was greater than 0.</li> </ul>
+
+The user dump descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { user:<i>STR</i>, pres:[<i>STR</i>], conn:[<i>FRIENDSDUMP</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>user</code> is the ref of the user whose presence information is
+being described.</li>
+
+<li><code>pres</code> is an array of the refs of the contexts in which the
+indicated user is currently present.  This information is only provided if the
+<code>depth</code> parameter is greater than 1.</li>
+
+<li><code>conn</code> is is an array of social graph connection information for
+the indicated user, with one element for each social graph domain for which
+there is at least one user present who is connected to the indicated user by
+the graph.  This information is only provided if the <code>depth</code>
+parameter is greater than 2.</li>
+</ul>
+
+The friends dump descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { domain:<i>STR</i>, friends:[<i>USERREF_STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>domain</code> is the name of the social graph domain.</li>
+
+<li><code>friends</code> is an array of the refs of other users connected to
+the user being dumped via the named social graph, who currently have some
+presence.</li>
+</ul>
+
+<h3>reinit</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"reinit" }
+</code></div>
+
+<p>This message instructs the Presence Server to reinitialize itself.
+
+<h3>shutdown</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"shutdown", kill:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Presence Server to shut down.
+
+<p>where:
+
+<ul>
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination.  Normally, a server will empty its message queues, checkpoint any
+active state, and perform an orderly shutdown.  However, if the
+<code>kill</code> flag is true, it will exit immediately without stopping to
+clean things up.  The value defaults to false if the parameter is omitted.</li>
+</ul>
+
+</div>
+</div>
+</body>
+</html>

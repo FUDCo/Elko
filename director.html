@@ -1,0 +1,951 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Director Protocols</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Elko Director Protocols</h1>
+
+<h2>The Director</h2>
+
+<p>The <em>Director</em> is an Elko server that coordinates the
+operation of a collection of Context Servers.  In particular, the Context
+Servers that a Director is working for keep it informed of their relative load
+factors, the opening and closing of contexts, the coming and going of users,
+and their availability for providing context services to arriving users.
+
+<p>The Director acts as a first contact point for users seeking entry to a
+particular context.  Rather than contacting a Context Server directly, a user
+client instead contacts a Director (indeed, the client may not even know the
+network address of any Context Server).  The client seeking entry informs the
+director of the ref of the context they wish to enter and the ref of the user
+as whom they wish to enter.  The Director then checks to see if the requested
+context is already loaded on one of the Context Servers it knows about.  If it
+is, the Director directs the user client to that Context Server.  If it is not,
+the Director picks a suitable Context Server and requests it to open the
+desired context, and directs the user client to to this newly chosen Context
+Server.  In either case, when the Director directs a client to a Context
+Server, it does not merely give the client the address of the Context Server,
+but also provides a <em>reservation</em>, an unguessable token that the
+Director also forwards to the chosen Context Server along with the context ref
+of the context being entered and the user ref of the user.  When the client
+contacts the Context Server, it provides this reservation token along with its
+other entry credentials.  The Context Server only permits a given client to
+enter a given context if it also provides the appropriate reservation token to
+do so.  Reservations also expire after a short time (currently 30 seconds).
+This scheme allows the Director to act as a load balancer for a server farm
+full of Context Servers.
+
+<p>Since a Director keeps track of the active users on its collection of
+Context Servers, it can also enable users to rendezvous with each other, by
+directing a user to the appropriate context containing another user whom they
+wish to meet.  This is especially important in highly scalable contexts, since
+context cloning may result in more than one instance of a particular context
+being active at any given time.  The Director keeps track of which users are in
+which clone instances.  In a similar vein, the Director can act as a message
+relay between users and contexts on different Context Servers.
+
+<p>Finally, since a Director is in contact with the entire collection of
+Context Servers, it can act as a centralized administration contact point for
+the server farm, enabling the whole farm or selected servers to be
+reinitialized, shutdown, or directed to take other specific actions.
+
+<p>A Director understands three different JSON message protocols.  These
+correspond to the three kinds of actors who may wish to communicate with a
+Director: Context Servers providing context services, clients seeking
+reservations for entry into contexts, and administrators.  Each of the ports
+that a Director listens for connections on can be configured to support any or
+all of these protocols.
+
+<p>Each of these protocols is associated with a particular object ref to which
+messages should be addressed:
+
+<ul>
+<li><code>director</code> for client messages requesting direction to Context
+Servers.</li>
+<li><code>provider</code> for Context Servers providing services.</li>
+<li><code>admin</code> for administrator messages.</li>
+</ul>
+
+<h2>Common Protocols</h2>
+
+<p>While there are three different message protocols, they share a common set
+of messages pertaining to connection housekeeping.  These messages may be
+targeted at any of the three protocol objects described above.
+
+<a name="auth"></a><h3>auth</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"auth", auth:<i>?AUTHDESC</i>, label:<i>?STR</i>}
+</code></div>
+
+<p>This message begins a new session with the Director, providing whatever
+authorization credentials as may be appropriate (according to the Director's
+server configuration) to gain access to services.
+
+<p>An <code>auth</code> message <strong>must</strong> be the first message sent
+to <code>director</code>, <code>provider</code>, or <code>admin</code> on any
+new connection to the Director.  Any other message to these objects will result
+in immediate termination of the connection.
+
+<p>If the <code>auth</code> operation fails, the connection will be terminated
+by the Director.  Otherwise, the client is thereafter free to send messages
+according to the protocol of the <code><i>REF</i></code> that was authorized.
+
+<ul>
+<li><code>auth</code> is a bundle of authorization information, as described
+below.  The specific authorization information that is relevant depends on the
+configuration of the Director server port being connected to.  If the
+<code>auth</code> parameter is omitted, an uncontrolled access in
+<em>open</em> mode is assumed.</li>
+
+<li><code>label</code> is an optional label for the connection.  This will be
+used in server log entries for debugging purposes and for identifying the
+connection in administrative requests.</li>
+</ul>
+
+<h4>Authorization information</h4>
+
+<p>The <code>auth</code> parameter of the <code>auth</code> message describes
+a bundle of authorization information to authorize access.  Its general form
+is:<p>
+
+<div class="indent"><code>
+    { type:"auth", mode:<i>STR</i>, code:<i>?STR</i>, id:<i>?STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>mode</code> is the requested authorization mode.  Currently
+recognized authorization modes are <code>"open"</code> and
+<code>"password"</code>.  Other modes may be relevant in the future or when
+talking to other kinds of servers.</li>
+
+<li><code>code</code> is an authorization code, whose meaning varies depending
+on the authorization mode.  In the case of open mode, it is irrelevant and
+should not be provided.  In the case of password mode, it is a password
+string.</li>
+
+<li><code>id</code> is an optional identity string, whose meaning varies
+depending on the authorization mode.  In the case of open mode, it is
+irrelevant and should not be provided.  In the case of password mode, it may or
+may not be relevant depending on the configuration.</li>
+</ul>
+
+<h3>disconnect</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"disconnect" }
+</code></div>
+
+<p>This message requests the server to terminate its connection to the sender.
+The connection to the server is broken.
+
+<h3>ping</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"ping", tag:<i>?STR</i> }
+</code></div>
+
+<p>This message tests connectivity to the server.
+
+<ul>
+<li><code>tag</code> is an optional string that may be anything of the client's
+choosing.</li>
+</ul>
+
+<p>If the message is successfully received by the server, it will reply
+with:<p>
+
+<div class="indent"><code>
+ &larr; { to:<i>REF</i>, op:"pong", tag:<i>?STR</i> }
+</code></div>
+
+<p>
+<ul>
+<li><code>tag</code> echoes the tag from the <code>ping</code> message, if
+there was one, or will be omitted if the original <code>ping</code> also
+omitted it.</li>
+</ul>
+
+<h3>debug</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF</i>, op:"debug", msg:<i>STR</i> }
+</code></div>
+
+<p>This message delivers debugging information to the server.  If the server is
+configured to permit this, the string given in the <code>msg</code> parameter
+will be written to the server's log.  If the server is not configured to permit
+this, this message will simply be ignored.
+
+<h2>User Protocol</h2>
+
+<p>The Director user protocol is used by user clients requesting reservations
+for entry to contexts.  There is only one message beyond the basic protocol:
+
+<h3>reserve</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"director", op:"reserve", protocol:<i>STR</i>,
+          context:<i>CONTEXTREF_STR</i>, user:<i>?USERREF_STR</i> }
+</code></div>
+
+<p>This message requests a reservation for entry into a context.
+
+<ul>
+<li><code>protocol</code> is the communications protocol by which the requestor
+wishes to communicate with the Context Server into which the requested context
+will be loaded.  Valid values currently are <code>"http"</code>,
+<code>"tcp"</code>, or <code>"rtcp"</code>.</li>
+
+<li><code>context</code> is the ref of the context into which entry is
+sought.</li>
+
+<li><code>user</code> is the optional ref of the user who is seeking entry.  If
+omitted, the reservation being requested will be anonymous.</li>
+</ul>
+
+If the reservation is successful, the reply will take the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"director", op:"reserve", context:<i>CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, hostport:<i>STR</i>,
+          reservation:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context, which will match the
+corresponding parameter from the request.</li>
+
+<li><code>user</code> is the ref of the user, which will match the
+corresponding parameter from the request (and will be omitted if it was omitted
+from the request).</li>
+
+<li><code>hostport</code> is a string of the form
+<code>"<em>hostname</em>:<em>portnumber</em>"</code> indicating the host name
+and port number of the Context Server on which the reservation has been
+made.</li>
+
+<li><code>reservation</code> is the reservation token to present to the Context
+Server in the <code>entercontext</code> request to enter the context.</li>
+</ul>
+
+If the reservation fails, the reply will take the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"director", op:"reserve", context:<i>CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, deny:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> and <code>user</code> have the same meanings as in the
+success case.</li>
+
+<li><code>deny</code> is an error message string indicating why the
+reservation could not be made.</li>
+</ul>
+
+<h2>Provider Protocol</h2>
+
+<p>The Director provider protocol is used by providers of context services,
+that is, by Context Servers, to aprise the Director of their availability.
+
+<h3>address</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"provider", op:"address", protocol:<i>STR</i>,
+          hostport:<i>STR</i> }
+</code></div>
+
+<p>This message informs the Director of the sender's availability to speak some
+protocol at some network address.
+
+<p>where:
+
+<ul>
+<li><code>protocol</code> is a communications protocol that the sender speaks
+at the indicated address.  Valid values currently are <code>"tcp"</code>,
+<code>"http"</code>, and <code>"rtcp"</code>.
+
+<li><code>hostport</code> is a string of the form
+<code>"<em>hostname</em>:<em>portnumber</em>"</code> indicating the host name
+and port number at which the sender may be contacted using the indicated
+protocol.</li>
+</ul>
+
+<h3>context</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"provider", op:"context", context:<i>CONTEXTREF_STR</i>,
+          open:<i>BOOL</i>, yours:<i>BOOL</i>, maxcap:<i>?INT</i>,
+          basecap:<i>?INT</i>, restricted:<i>?BOOL</i> }
+</code></div>
+
+<p>This message informs the Director of the opening or closing of a context by
+the sending Context Server.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context that was opened or closed.
+
+<li><code>open</code> is a flag that is true if the context was opened, false
+if it was closed.</li>
+
+<li><code>yours</code> is a flag that is true if this context was opened at the
+request of the Director to whom this message is being sent.  This is used in a
+handshake to resolve a race condition that can happen if multiple different
+Directors concurrently request different Context Servers to open the same
+context.  Note that this flag always indicates whether the recipient requested
+the <em>opening</em> of the context, regardless of whether this message is
+describing a context open or a context close.</li>
+
+<li><code>maxcap</code> indicates the maximum number of users that the Director
+should allow to be admitted to the context.  This is only relevant on a context
+open.  It is optional, and defaults to -1, meaning unlimited capacity, if
+omitted.
+
+<li><code>basecap</code> indicates the maximum number of users that the
+Director should place in the context before directing a clone of the context to
+be opened instead.  This is only relevant on a context open, and defaults to
+the value of <code>maxcap</code> if omitted.  A value of -1 indicates that the
+context should never be cloned.</li>
+
+<li><code>restricted</code> is a flag that is true if the context is
+restricted.  A restricted context is one that users (clients authorized to send
+messages to <code>"user"</code> may not request a reservation for (though
+context servers themselves may).</li> This is only relevant on a context open.
+It is optional and defaults to false, meaning unrestricted, if omitted.  </ul>
+
+<h3>load</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"provider", op:"load", factor:<i>FLOAT</i> }
+</code></div>
+
+<p>This message informs the Director of sender's current load.
+
+<p>where:
+
+<ul>
+<li><code>factor</code> is sender's current load factor.  This may be any
+value, though all Context Servers talking to a given Director should all share
+a single, commensurable metric.</li>
+</ul>
+
+<h3>relay</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"provider", op:"relay", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, msg:<i>JSONOBJ</i> }
+</code></div>
+
+<p>This message requests the Director to relay a message to a user or context
+on a different Context Server from the sender.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context to relay the message
+to.</li>
+
+<li><code>user</code> is the ref of the user to relay the message to.</li>
+
+<li><code>msg</code> is the message to relay.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  If the base ref of a cloned
+context or user is specified, the message will be relayed to all Context
+Servers (other than the sender) who host clones of the indicated recipient
+context or user.
+
+<p>The <code>relay</code> message will result in the corresponding
+<code>relay</code> message being sent to all relevant Context Servers (i.e.,
+those serving the context or user indicated).  It takes the same form as the
+inbound request:<p>
+
+<div class="indent"><code>
+ &larr; { to:"provider", op:"relay", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, msg:<i>JSONOBJ</i> }
+</code></div>
+
+<h3>user</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"provider", op:"user", context:<i>CONTEXTREF_STR</i>,
+          user:<i>USERREF_STR</i>, on:<i>BOOL</i> }
+</code></div>
+
+<p>This message informs the Director of the entry or exit of a user to or from
+a context hosted by the sender.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context that the user entered or
+exited.</li>
+
+<li><code>user</code> is the ref of the user who entered or exited.</li>
+
+<li><code>on</code> is a flag that is true the user entered, false if the user
+exited.</li>
+</ul>
+
+<h3>willserve</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"provider", op:"willserve", context:<i>STR</i>,
+          capacity:<i>?INT</i> }
+</code></div>
+
+<p>This message informs the Director of the sender's availability to serve some
+family of contexts.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref prefix of the family of contexts that the
+sender is prepared to serve.  Typically this is the string
+<code>"context"</code>, but that is not mandatory.</li>
+
+<li><code>capacity</code> is an optional limit on the maximum number of user
+clients that the sender is willing to serve for the indicated class of
+contexts.  If omitted, it defaults to -1, indicating no limit.</li>
+</ul>
+
+<h3>close</h3>
+
+This message may be sent by the Director to the Context Server.  It instructs
+the Context Server to force the closure of a context or the disconnection of a
+user.<p>
+
+<div class="indent"><code>
+ &larr; { to:"provider", op:"close", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, dup:<i>?BOOL</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context to close.</li>
+
+<li><code>user</code> is the ref of the user to disconnect.</li>
+
+<li><code>dup</code> is true if the context closure or user disconnection is
+requested as part of the Director resolving a duplicated context open.</li>
+</ul>
+
+<p>The <code>context</code> and <code>user</code> parameters are mutually
+exclusive.
+
+<h3>reinit</h3>
+
+This message may be sent by the Director to the Context Server.  It instructs
+the Context Server to reinitialize itself.<p>
+
+<div class="indent"><code>
+ &larr; { to:"provider", op:"reinit" }
+</code></div>
+
+<h3>shutdown</h3>
+
+This message may be sent by the Director to the Context Server. It instructs
+the Context Server to shut itself down.<p>
+
+<div class="indent"><code>
+ &larr; { to:"provider", op:"shutdown", kill:<i>?BOOL</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination of the Context Server.  Normally, the server would empty its
+message queue, checkpoint any active state, and perform an orderly shutdown.
+However, if the <code>kill</code> flag is true, it will exit immediately
+without stopping to clean things up.  The value defaults to false if the
+parameter is omitted.</li>
+</ul>
+
+<h3>say</h3>
+
+This message may be sent by the Director to the Context Server. It requests the
+Context Server to deliver a <code>say</code> message to a particular user or to
+the users in a particular context.<p>
+
+<div class="indent"><code>
+ &larr; { to:"provider", op:"say", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, text:<i>STR</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of a context being spoken to.</li>
+
+<li><code>user</code> is the ref of a user being spoken to.</li>
+
+<li><code>text</code> is speech text directed at the indicated context or
+user.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  If the base ref of a cloned
+context or user is specified, all clones of the indicated context or user will
+be spoken to.
+
+
+<h2>Admin Protocol</h2>
+
+<p>The Director admin protocol is used to administer the Director and,
+indirectly, the entire collection of Context Servers it is in contact with.
+
+<h3>close</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"close", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i> }
+</code></div>
+
+<p>This message instructs the Director to force the closure of a context or the
+disconnection of a user.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context to close.</li>
+
+<li><code>user</code> is the ref of the user to disconnect.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  If the base ref of a cloned
+context or user is specified, all clones of the indicated context or user will
+be closed.
+
+<p>If the indicated context is open or the indicated user is connected, the
+Director will send a provider <code>close</code> message to each relevant
+connected Context Server instructing it to take the requested action.
+
+<h3>dump</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"dump", depth:<i>INT</i>, provider:<i>?STR</i>,
+          context:<i>?CONTEXTREF_STR</i> }
+</code></div>
+
+<p>This message requests the Director to provide a dump of its state to the
+requesting administrator.
+
+<p>where:
+
+<ul>
+<li><code>depth</code> indicates the depth of detail to provide (see
+below).</li>
+
+<li><code>provider</code> optionally limits the scope of the information dumped
+to providers matching the parameter string.  This is matched against the label
+string provided in the <code>auth</code> message that providers sent when they
+connected to the Director.</li>
+
+<li><code>context</code> optionally limits the scope of the information dumped
+to contexts matching the parameter string.</li>
+</ul>
+
+The Director will reply  with a message of the form:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"dump", numproviders:<i>INT</i>,
+          numcontexts:<i>INT</i>, numusers:<i>INT</i>,
+          providers:[<i>PROVIDERDUMP</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>numproviders</code> is the number of providers, currently connected
+to the Director and providing context services, that are described by this
+dump.</li>
+
+<li><code>numcontexts</code> is the number of open contexts that are described
+by this dump.</li>
+
+<li><code>numusers</code> is the number of connected users that are described
+by this dump.</li>
+
+<li><code>providers</code> is an array of provider dump descriptors, each of
+which describes one provider.  This will only be provided if the value of the
+<code>depth</code> parameter was greater than 0.</li> </ul>
+
+The provider dump descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"providerdesc", provider:<i>STR</i>, numcontexts:<i>INT</i>,
+   numusers:<i>INT</i>, load:<i>FLOAT</i>, capacity:<i>INT</i>,
+   hostports:[<i>STR</i>], protocols:[<i>STR</i>], serving:[<i>STR</i>],
+   contexts:[<i>OPENCONTEXTDUMP</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>provider</code> is the label that the provider gave for itself in the
+<code>auth</code> message with which it connected to the Director.</li>
+
+<li><code>numcontexts</code> is the number of open contexts currently being
+served by this provider.</li>
+
+<li><code>numusers</code> is the number of connected users currently being
+served by this provider.</li>
+
+<li><code>load</code> is this provider's current load factor.</li>
+
+<li><code>capacity</code> is number of user clients this provider is willing to
+serve.</li>
+
+<li><code>hostports</code> is an array of
+<code>"<em>hostname</em>:<em>portnumber</em>"</code> strings listing all the
+ports at which the provider is providing context services.</li>
+
+<li><code>protocols</code> is an array of strings, parallel to
+<code>hostports</code>, indicating the protocol spoken at the corresponding
+<code>hostports</code> entry.  The value of each element of this array will be
+either <code>"tcp"</code> or <code>"http"</code>.</li>
+
+<li><code>serving</code> is an array of strings listing the context families
+that the provider is willing to serve.</li>
+
+<li><code>contexts</code> is an array of context dump descriptors, each of
+which describes one open context.  This will only be provided if the value of
+the <code>depth</code> parameter was greater than 1.</li> </ul>
+
+The open context dump descriptor takes the form:<p>
+
+<div class="indent"><code>
+ { type:"contextdesc", context:<i>CONTEXTREF_STR</i>, numusers:<i>INT</i>,
+   users:[<i>USERREF_STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> is ref of the open context.</li>
+
+<li><code>numusers</code> is the number of users currently in the context.</li>
+
+<li><code>users</code> is an array of the refs of the users currently in the
+context.  This will only be provided if the value of the <code>depth</code>
+parameter was greater than 2.</li> </ul>
+
+<h3>find</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"find", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i> }
+</code></div>
+
+<p>This message requests the Director to provide the location of a context or
+user.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context whose location is
+sought.</li>
+
+<li><code>user</code> is the ref of the user whose location is sought.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  If the base ref of a cloned
+context or user is specified, the locations of all clones of the indicated
+context or user will be returned.
+
+<p>If a context location was requested, the Director will reply with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"context", context:<i>?CONTEXTREF_STR</i>,
+          open:<i>BOOL</i>, provider:<i>?STR</i>,
+          clones:[<i>CONTEXTREF_STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context that was inquired
+about.</li>
+
+<li><code>open</code> is true if the the context is open, on one of the
+Director's provider Context Servers, false if not.</li>
+
+<li><code>provider</code> is the label of the provider on which the context is
+open, it is open.  This field is absent if the context is not open.</li>
+
+<li><code>clones</code> is an optional array of context refs of open clones of
+the context, if the context is cloned (note that in such a case,
+<code>open</code> will be false).</li>
+</ul>
+
+<p>If a user location was requested, the Director will reply with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"user", user:<i>?USERREF_STR</i>, on:<i>BOOL</i>,
+          contexts:[<i>CONTEXTREF_STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>user</code> is the ref of the user that was inquired about.</li>
+
+<li><code>on</code> is true if the the user is connected to one of the
+Director's provider Context Servers, false if not.</li>
+
+<li><code>contexts</code> is an array of context refs of all open contexts that
+the user is in.  This will be provided only if the user has entered at least
+one context.</li> </ul>
+
+<h3>listcontexts</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"listcontexts" }
+</code></div>
+
+<p>This message requests the Director to provide a list of currently open
+contexts.
+
+<p>The Director will reply with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"listcontexts", contexts:[<i>CONTEXTREF_STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>contexts</code> is an array of context refs of open contexts.</li>
+</ul>
+
+<h3>listproviders</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"listproviders" }
+</code></div>
+
+<p>This message requests the Director to provide a list of known providers
+(i.e., Context Servers).
+
+<p>The Director will reply with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"listproviders", providers:[<i>STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>providers</code> is an array of the labels of providers currently
+connected to the Director.</li>
+</ul>
+
+<h3>listusers</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"listusers" }
+</code></div>
+
+<p>This message requests the Director to provide a list of currently connected
+users.
+
+<p>The Director will reply with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"admin", op:"listusers", users:[<i>USERREF_STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>users</code> is an array of users refs of connected users.</li>
+</ul>
+
+<h3>reinit</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"reinit", provider:<i>?STR</i>,
+          director:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Director to reinitialize one or more servers.
+
+<p>where:
+
+<ul>
+<li><code>provider</code> is the optional label for a provider to be
+reinitialized.  Alternatively, the string <code>"all"</code> indicates that all
+providers are to be reinitialized.  If omitted, no providers will be
+reinitialized.</li>
+
+<li><code>director</code> is an optional flag that if true directs that the
+Director itself also be reinitialized.  The value defaults to false if the
+parameter is omitted.  Director reinitialization, if requested, will take place
+after any provider reinitializations.</li>
+</ul>
+
+If any providers are to be reinitialized, each will be sent a corresponding
+<code>reinit</code> message on its provider connection.
+
+<h3>relay</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"relay", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, msg:<i>JSONOBJ</i> }
+</code></div>
+
+<p>This message requests the Director to relay a message to a user or context
+on whatever Context Server is appropriate.  It takes the exact same form and
+has the same behavior as the corresponding message in the provider protocol,
+except of course that it is targeted at <code>"admin"</code> instead of
+<code>"provider"</code>.
+
+<h3>say</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"say", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i>, text:<i>STR</i> }
+</code></div>
+
+<p>This message requests the Director to deliver a <code>say</code> message to
+a particular user or to the users in a particular context.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of a context being spoken to.</li>
+
+<li><code>user</code> is the ref of a user being spoken to.</li>
+
+<li><code>text</code> is speech text directed at the indicated context or
+user.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  If the base ref of a cloned
+context or user is specified, all clones of the indicated context or user will
+be spoken to.
+
+<p>The Director will send a corresponding <code>say</code> message to each
+relevant Context Server.
+
+<h3>shutdown</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"shutdown", provider:<i>?STR</i>,
+          director:<i>?BOOL</i>, kill:<i>?BOOL</i> }
+</code></div>
+
+<p>This message instructs the Director to shut down one or more servers.
+
+<p>where:
+
+<ul>
+<li><code>provider</code> is the optional label for a provider to be shut down.
+Alternatively, the string <code>"all"</code> indicates that all providers are
+to be shut down.  If omitted, no providers will be shut down.</li>
+
+<li><code>director</code> is an optional flag that if true directs that the
+Director itself also be shut down.  The value defaults to false if the
+parameter is omitted.  Director shutdown, if requested, will take place after
+any provider shutdowns.</li>
+
+<li><code>kill</code> is an optional flag that if true orders an abrupt
+termination of the indicated server(s).  Normally, servers will empty their
+message queues, checkpoint any active state, and perform an orderly shutdown.
+However, if the <code>kill</code> flag is true, they will exit immediately
+without stopping to clean things up.  The value defaults to false if the
+parameter is omitted.</li>
+</ul>
+
+If any providers are to be shut down, each will be sent a corresponding
+<code>shutdown</code> message on its provider connection.
+
+<h3>watch</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"watch", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i> }
+</code></div>
+
+<p>This message requests the Director to begin providing ongoing updates as to
+the location of a context or user.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context of interest.</li>
+
+<li><code>user</code> is the ref of the user of interest.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  If the base ref of a cloned
+context or user is specified, the locations of all clones of the indicated
+context or user will be watched.
+
+<p>The operation of <code>watch</code> is similar to <code>find</code>, except
+that the Director maintains continuous surveillance of the context or user
+indicated.  Each time the context is opened or close, or the user enters or
+exits, a <code>context</code> or <code>user</code> message will be sent to the
+administrator.  These messages take the same form as they do in the replies to
+the <code>find</code> request; the only difference is that the behavior is
+spontaneous and asynchronous.
+
+<h3>unwatch</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"admin", op:"unwatch", context:<i>?CONTEXTREF_STR</i>,
+          user:<i>?USERREF_STR</i> }
+</code></div>
+
+<p>This message requests the Director to cease providing ongoing updates as to
+the location of a context or user.  It undoes the effect of an earlier
+<code>watch</code> request.
+
+<p>where:
+
+<ul>
+<li><code>context</code> is the ref of the context of interest.</li>
+
+<li><code>user</code> is the ref of the user of interest.</li>
+</ul>
+
+The <code>context</code> and <code>user</code> parameters are mutually
+exclusive, and one or the other must be provided.  For this request to be
+useful, the parameters should match those of an earlier <code>watch</code>
+request.  However, requesting an <code>unwatch</code> of a context or user that
+was not actually being watched is a benign operation with no effect.
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Client Mods</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Basic Mod Set: Client View</h1>
+
+<h2>Cartesian</h2>
+
+<p>The <em>Cartesian</em> mod provides the item to which it is attached with
+simple two-dimensional cartesian geometry.  It also supports user manipulation
+of the containership relation between objects.  This mod may not be attached to
+users or contexts.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"cart", left:<i>INT</i>, top:<i>INT</i>, width:<i>INT</i>,
+      height:<i>INT</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>left</code> and <code>top</code> are the X and Y coordinates of the
+screen position (in pixels) of the assocated item, relative to the position of
+its container.</li>
+
+<li><code>width</code> and <code>height</code> are the X and Y screen
+dimensions (in pixels) of the associated item.</li>
+</ul>
+
+<h3>Messages</h3>
+
+<h4>move</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>ITEMREF_STR</i>, into:<i>?REF_STR</i>, left:<i>INT</i>,
+          top:<i>INT</i> }
+</code></div>
+
+<p>This message requests the server to change the position and optionally the
+container of the item to which it is targeted.
+
+<ul>
+<li><code>into</code> optionally designates a new container for the item.  The
+designated container must be reachable by the user sending the message.</li>
+
+<li><code>left</code> and <code>top</code> are the new position coordinates for
+the item, relative to its (new) container.  Note that if the container is a
+user or the context, this is the item's position in the browser window
+itself.</li> </ul>
+
+If the destination is acceptable to the server, it changes the position and
+container of the targeted item, then broadcasts the <code>"move"</code> message
+to all users in the context informing them of the change.
+
+<h2>Census</h2>
+
+<p>The <em>Census</em> mod allows a client to survey the number of users in
+a context.  It may be attached to any kind of object.
+
+<h3>Representation</h3>
+
+<p>There is no client-side representation of the <em>Census</em> mod.
+
+<h3>Messages</h3>
+
+<h4>census</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF_STR</i>, op:"census" }
+</code></div>
+
+<p>This message requests a census of the context.  The server will reply to the
+sender with the message:
+
+<div class="indent"><code>
+ &larr; { to:<i>REF_STR</i>, op:"census", occupancy:<i>INT</i> }
+</code></div>
+
+<p>where the <code>occupancy</code> parameter is the number of users in the
+context as of the time the message was sent.
+
+<p>Note that this operation works, assuming the mod is present, even in
+contexts where the users are not visible to each other.  That is sort of the
+point, actually.
+
+
+<h2>Chat</h2>
+
+<p>The <em>Chat</em> mod enables multi-user text chat in a context.  It is
+attached to a context, never to a user or item.  On the server, it may be
+configured to individually allow or disallow the <code>"say"</code> or
+<code>"push"</code> messages, both to the context as a whole (public chat or
+push) and to individual users (private chat or push).
+
+<h3>Representation</h3>
+
+<p>There is no client-side representation of the <em>Chat</em> mod.
+
+<h3>Messages</h3>
+
+<h4>say</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF_STR</i>, op:"say", text:<i>STR</i> }
+</code></div>
+
+<p>This message utters chat text on behalf of its sender.  If the message is
+targeted at the context and the context's <em>Chat</em> mod is configured to
+allow chat, the server will transmit a corresponding <code>"say"</code> message
+to all users in the context, targeted at the context, with the same text, and
+marked as being from the user associated with the client sending this message.
+See the discussion of the <code>"say"</code> message in the <a
+href="clientcui.html#msgsgeneric">Generic Messages</a> section of the C-U-I
+Model document.  If the message is targeted at a user and that user is in the
+same context as the sender and the <em>Chat</em> mod is configured to allow
+private chat, the server will transmit two copies of a corresponding
+<code>"say"</code> message, one to the targeted user's client and one sent back
+to the original sender.
+
+<ul>
+<li><code>text</code> is the message being spoken.</li>
+</ul>
+
+<p>If the user sending the <code>"say"</code> message has a <em>TalkPrefs</em>
+mod attached, clients should use its style attributes to render that user's
+chat text.
+
+<h4>push</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF_STR</i>, op:"push", url:<i>STR</i>, frame:<i>?STR</i> }
+</code></div>
+
+<p>This message issues a push request on behalf of its sender.  If the message
+is targeted at the context and the <em>Chat</em> mod is configured to allow
+push, the server will transmit a corresponding <code>"push"</code> message to
+all users in the context, targeted at the context, with the same URL and frame,
+and marked as being from the user associated with the client sending this
+message.  See the discussion of the <code>"push"</code> message in the <a
+href="clientcui.html#msgsgeneric">Generic Messages</a> section of the C-U-I
+document.  If the message is targeted at a user and that user is in the same
+context as the sender and the <em>Chat</em> mod is configured to allow private
+push, the server will transmit two copies of a corresponding
+<code>"push"</code> message, one to the targeted user's client and one sent
+back to the original sender.
+
+<ul>
+<li><code>url</code> is the URL to load.</li>
+
+<li><code>frame</code>, if given, names the browser HTML frame into which the
+URL is to be loaded.  If omitted, the URL is loaded as an entirely new
+page.</li>
+</ul>
+
+
+<h2>Dictionary</h2>
+
+<p>The <em>Dictionary</em> mod associates a server-moderated name/value lookup
+table with the object to which it is attached.  It may be attached to a
+context, user or item.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"dictionary", names:[<i>STR</i>], values:[<i>STR</i>] }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>names</code> is an array of strings, containing the dictionary's
+lookup keys.</li>
+
+<li><code>values</code> is an array of strings parallel to <code>names</code>,
+containing the values.  For a given element of <code>names</code>, the element
+of <code>values</code> with the same array index contains that name's
+value.</li>
+</ul>
+
+<h3>Messages</h3>
+
+<h4>delvar</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF_STR</i>, op:"delvar", names:[<i>STR</i>] }
+</code></div>
+
+<p>This message requests the server to delete one or more name/value pairs from
+the dictionary.
+
+<ul>
+<li><code>names</code> is an array of strings containing the names of the
+entries to delete.  Elements of the <code>names</code> parameter array that do
+not correspond to entries in the dictionary will simply be ignored.</li>
+</ul>
+
+<p>Once the indicated entries are deleted, the <code>"delvar"</code> message
+will be broadcast to all clients in the context, informing them of the change.
+
+<h4>setvar</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>REF_STR</i>, op:"setvar", names:[<i>STR</i>], values:[<i>STR</i>] }
+</code></div>
+
+<p>This message requests the server to change the value of one or more
+name/value pairs in the dictionary.
+
+<ul>
+<li><code>names</code> is an array of strings containing the names of the
+entries to be set.</li>
+
+<li><code>values</code> is a parallel array of strings containing the
+corresponding values to set those entries to.</li>
+</ul>
+
+<p>Elements of the <code>names</code> parameter array that do not correspond to
+entries in the dictionary may result, at the server's discretion, in the
+addition of new name/value entries to the dictionary.
+
+<p>Once the indicated entries are set, the <code>"setvar"</code> message will
+be broadcast to all clients in the context, informing them of the change.
+
+<h2>Image</h2>
+
+<p>The <em>Image</em> mod associates an image with the object to which it is
+attached.  It may be attached to any kind of object, but normally it will be
+attached to items.  This mod is purely a data object; it has no behavior and no
+message protocol.  It is up to the client application to make use of this data
+appropriately.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"image", img:<i>STR</i>, width:<i>?INT</i>, height:<i>?INT</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>img</code> is the URL of an image.</li>
+
+<li><code>width</code> and <code>height</code>, if given, represent the
+horizontal and vertical extent of this image, in pixels.</li>
+</ul>
+
+
+<h2>Note</h2>
+
+<p>The <em>Note</em> mod associates a block of editable text with the item to
+which it is attached.  It must be attached to an item, not a context or user.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"note", text:<i>STR</i>, style:<i>?STYLEDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>text</code> is the text of the note.</li>
+
+<li><code>style</code> is an optional style description for rendering the text.
+See below for details on the <a href="#styledesc">style descriptor</a>
+object.</li> </ul>
+
+<h3>Messages</h3>
+
+<h4>edit</h4>
+
+<div class="indent"><code>
+ &rarr; { to:<i>ITEMREF_STR</i>, op:"edit", text:<i>?STR</i>, style:<i>?STYLEDESC</i> }
+</code></div>
+
+<p>This message requests the server to alter the text and/or style information
+on the note.
+
+<ul>
+<li><code>text</code>, if given, is new text for the note.</li>
+
+<li><code>style</code>, if given, is new style information for the note.  Only
+those attributes of the style that are actually sent will be modified; the
+remainder will be left unchanged.</li>
+</ul>
+
+<p>Once the indicated changes are made to the note on the server, the
+<code>"edit"</code> message will be broadcast to all clients in the context,
+informing them of the change.
+
+
+<h2>NoteMaker</h2>
+
+<p>The <em>NoteMaker</em> mod provides a facility for creating new items with
+<em>Notes</em> attached.  It is normally attached to the context, but this is
+not required.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"notemaker", styles:<i>STYLEOPTIONSDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>styles</code> is a collection of style options that can constrain the
+styles associated with notes this mod creates.  See below for details on the
+<a href="#styleopts">style options descriptor</a> object.</li>
+</ul>
+
+<h3>Messages</h3>
+
+<h4>makenote</h4>
+
+<p>This message requests the server to create a new item with associated
+<em>Note</em> and <em>Cartesian</em> mods.
+
+<div class="indent"><code>
+ &rarr; {
+</code><div class="indent"><code>
+        to:<i>REF_STR</i>,<br>
+        op:"makenote",<br>
+        into:?<i>REF_STR</i>,<br>
+        left:<i>INT</i>, top:<i>INT</i>,<br>
+        width:<i>INT</i>, height:<i>INT</i>,<br>
+        text:<i>STR</i>,<br>
+        style:<i>?STYLEDESC</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>
+<ul>
+<li><code>into</code> designates the container for the new item.  It must be
+reachable by the user sending the request.  If omitted, the new item is placed
+into the context itself.</li>
+
+<li><code>left</code> and <code>top</code> are the X and Y coordinates of the
+screen position (in pixels) of the new note, relative to the position of its
+container.</li>
+
+<li><code>width</code> and <code>height</code> are the X and Y screen
+dimensions (in pixels) of the new note.</li>
+
+<li><code>text</code> is the text of the new note.</li>
+
+<li><code>style</code>, if given, indicates the style attributes of the new
+note.  Any style attributes which are not given (possibly all of them) will be
+taken from the defaults configured into the <em>NoteMaker</em>).  If any of the
+style attributes requested are not permitted by the configured style options,
+the <code>"makenote"</code> request will fail.</li>
+</ul>
+
+<p>If the request succeeds, a new item will be created in the indicated
+container, with attached <em>Note</em> and <em>Cartesian</em> mods according to
+the parameters given.  The new item will be broadcast to all users in the
+context via a <code>"make"</code> message targeted at the new item's container.
+
+
+<h2>TalkOptions</h2>
+
+<p>The <em>TalkOptions</em> mod describes controls the style information
+associated with user utterances displayed as a result of <code>"say"</code>
+messages.  This mod must be attached to a context, not to a user or item.  It
+operates in conjunction with the <em>Chat</em> and <em>TalkPrefs</em> mods.
+This mod is purely a data object; it has no message protocol.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"talkoptions", styles:<i>STYLEOPTIONSDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>styles</code> is a collection of style options that can constrain the
+styles associated with chat.  See below for details on the <a
+href="#styleopts">style options descriptor</a> object.</li>
+</ul>
+
+
+<h2>TalkPrefs</h2>
+
+<p>The <em>TalkPrefs</em> mod holds a user's current chat text display style
+settings.  It operates in conjunction with the <em>Chat</em> and
+<em>TalkOptions</em> mods.  It is always attached to a user.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    { type:"talkprefs", style:<i>STYLEDESC</i> }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>style</code> is a style descriptor that indicates how the user's chat
+utterances (as conveyed by <code>"say"</code> messages) are to be
+displayed.</li>
+</ul>
+
+<h3>Messages</h3>
+
+<h4>style</h4>
+
+<p>The <code>"style"</code> message enables a user to request that their talk
+preference settings be changed.<p>
+
+<div class="indent"><code>
+ &rarr; { to:<i>USERREF_STR</i>, op:"style",
+      color:<i>?STR</i>,
+      backgroundColor:<i>?STR</i>,
+      icon:<i>?STR</i>,
+      textStyle:<i>?STR</i> }
+</code></div>
+
+<p>
+<ul>
+<li><code>color</code>, if given, names the new preferred text color.</li>
+
+<li><code>backgroundColor</code>, if given, names the new preferred text
+background color.</li>
+
+<li><code>icon</code>, if given, is the URL of the marker icon image used to
+distinguish the user in chat logs.</li>
+
+<li><code>textStyle</code>, if given, is a style string for the rendering of
+chat text.</li>
+</ul>
+
+<p>All parameters are optional.  Any parameters omitted will result in the
+corresponding talk preferences setting remaining unchanged.  If there is a
+<em>TalkOptions</em> mod attached to the context, the settings specified must
+be consistent with what that <em>TalkOptions</em> mod allows.  Also note that a
+user may only change their own <em>TalkPrefs</em> and not those of other users.
+If the changes indicated are acceptable, the server alters the user's talk
+preferences and broadcasts the <code>"style"</code> message to all users in the
+context.
+
+
+<h2>Descriptor Objects</h2>
+
+<p>There are a couple of JSON objects that are used to carry standard bundles
+of information in the representations of certain mods and in some messages.
+These are not mods or messages themselves, but simply bundles of data.
+
+<a name="styledesc"></a><h2>Style Descriptor</h2>
+
+<p>The style descriptor contains information for the rendering of text.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"style",<br>
+        color:<i>?STR</i>,<br>
+        backgroundColor:<i>?STR</i>,<br>
+        borderColor:<i>?STR</i>,<br>
+        textStyle:<i>?STR</i>,<br>
+        icon:<i>?STR</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>color</code>, if given, is the name of the text color.</li>
+
+<li><code>backgroundColor</code>, if given, is the name of the text background
+color.</li>
+
+<li><code>borderColor</code>, if given, is the name of the text border
+color.</li>
+
+<li><code>textStyle</code>, if given, is an HTML CSS style string for a text
+element.</li>
+
+<li><code>icon</code>, if given, is the URL of a marker icon.</li>
+</ul>
+
+<p>All elements are optional.  Color names are standard HTML color names.
+
+
+<a name="styleopts"></a><h2>Style Options Descriptor</h2>
+
+<p>The style options descriptor contains a collection of text style
+information.  It represents a range of permitted style values for use in
+preference setting and display.
+
+<h3>Representation</h3>
+
+<div class="indent"><code>
+    {
+</code><div class="indent"><code>
+        type:"styleoptions",<br>
+        colors:[<i>STR</i>],<br>
+        backgroundColors:[<i>STR</i>],<br>
+        borderColors:[<i>STR</i>],<br>
+        textStyles:[<i>STR</i>],<br>
+        icons:[<i>STR</i>],<br>
+        iconWidth:<i>?INT</i>,<br>
+        iconHeight:<i>?INT</i>
+</code></div><code>
+    }
+</code></div>
+
+<p>where:
+
+<ul>
+<li><code>colors</code>, if given, is a series of permissible text color
+names.</li>
+
+<li><code>backgroundColors</code>, if given, is a series of permisslbe text
+background color names.</li>
+
+<li><code>borderColors</code>, if given, is a series of permissible text border
+color names.</li>
+
+<li><code>textStyles</code>, if given, is a series of permissible text style
+strings.</li>
+
+<li><code>icons</code>, if given, is a series of permissible marker icon URL
+strings.</li>
+
+<li><code>iconWidth</code> and <code>iconHeight</code>, if given, are the
+common width and height, pixels, of the icons specified by the
+<code>icons</code> attribute.</li>
+</ul>
+
+<p>All elements are optional.
+
+</div>
+</div>
+</body>
+</html>

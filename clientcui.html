@@ -1,0 +1,471 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Elko Server Framework</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="elkodoc.css" >
+</head>
+
+<body>
+<div id="doc">
+
+<div>
+  <div id="logo"><a href="/"><img src="elkologosmall.png" alt="small Elko logo" border="0"></a></div>
+  <div id="pagetitle"><h1>Elko: Client Objects</h1></div>
+</div>
+
+<div id="main">
+
+<h1>The Client View of the Context-User-Item Model</h1>
+
+<h2>The Session Object</h2>
+
+<p>When a client first establishes a connection to a Context Server, there is
+one server object in scope that it can send messages to.  This is the Session
+object, which represents the session connection itself.  The Session object is
+always known by the ref <code>"session"</code>.
+
+<h4>The client may send the following messages to the server presence of the
+Session object:</h4>
+
+<h3>entercontext</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"session", op:"entercontext",
+      context:<i>CTXREF_STR</i>,
+      user:<i>?USERREF_STR</i>,
+      name:<i>?STR</i>,
+      sess:<i>?STR</i>,
+      auth:<i>?STR</i>,
+      debug:<i>?BOOL</i> }
+</code></div>
+
+<p>This message places (or attempts to place) a user into a particular context
+on the server.
+
+<ul>
+<li><code>context</code> is the ref of the context into which the user is
+seeking entry.</li>
+
+<li><code>user</code> is the ref of the user as whom the client is attempting
+to enter.  Whether this parameter is required or not depends on the
+context.</li>
+
+<li><code>name</code> is a name string to present for the user in the
+application user interface, particularly to other users.  This parameter is
+usually only applicable when the <code>user</code> parameter is omitted.  If
+both <code>user</code> and <code>name</code> are omitted, the default name is
+<code>"&lt;anonymous&gt;"</code>.</li>
+
+<li><code>sess</code> is an optional client-in-context session identifier
+string, enabling the client to associate a particular context entry
+notification with a particular <code>entercontext</code> request.  If this
+parameter is given in the <code>entercontext</code> request, a corresponding
+<code>sess</code> parameter will be provided in the <code>make</code> message
+that the server sends to the client to create the client presence of the
+context object.</li>
+
+<li><code>auth</code> is an authorization string that may be required to gain
+entry into the context.  If the context is a password-protected context, this
+string must be the correct password.  If the context is a
+reservation-controlled context, this string must be the reservation token that
+was issued by the Director.</li>
+
+<li><code>debug</code> is an optional flag that configures the session for
+debugging if the server is configured to permit this.  The main effect of this
+is to increase some of the timeouts when communicating over HTTP, so that a
+developer who is composing requests manually using something like Telnet won't
+be disconnected because they type too slowly.</li>
+</ul>
+
+If entry is successful, the server will transmit a series of
+<code>"make"</code> messages describing the context and the users and items it
+contains, including a description of the entering user.  This series of
+<code>"make"</code> messages will be terminated by a <code>"ready"</code>
+message targeted at the context, after which the client may consider itself to
+be fully entered into the context.  In particular, after that point, the server
+may send additional, unsolicited messages to the client describing changes in
+the context environment and activity going on there.  The nature of these
+messages depends on the specific application that the context is presenting.
+
+<p>Note that a user may be entered into more than one context concurrently.
+The user's presence in any particular context will be identified by a unique
+context-specific reference string that will be provided as part of the user
+description sent to the client in response to the <code>"entercontext"</code>
+message.  Messages sent from the server to the client will use this reference
+string as the message target for messages to the user, allowing the client to
+disambiguate which presence (and thus which application) the message pertains
+to.
+
+<h3>disconnect</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"session", op:"disconnect" }
+</code></div>
+
+<p>This message removes the user from any contexts they are in and terminates
+the session.  The connection to the server is broken.
+
+<h3>ping</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"session", op:"ping", tag:<i>?STR</i> }
+</code></div>
+
+<p>This message tests connectivity to the server.
+
+<ul>
+<li><code>tag</code> is an optional string that may be anything of the client's
+choosing.</li>
+</ul>
+
+<p>If the message is successfully received by the server, it will reply
+with:<p>
+
+<div class="indent"><code>
+ &larr; { to:"session", op:"pong", tag:<i>?STR</i> }
+</code></div>
+
+<p>
+<ul>
+<li><code>tag</code> echoes the tag from the <code>ping</code> message, if
+there was one, or will be omitted if the original <code>ping</code> also
+omitted it.</li>
+</ul>
+
+<h3>debug</h3>
+
+<div class="indent"><code>
+ &rarr; { to:"session", op:"debug", msg:<i>STR</i> }
+</code></div>
+
+<p>This message delivers debugging information to the server.  If the server is
+configured to permit this, the string given in the <code>msg</code> parameter
+will be written to the server's log.  If the server is not configured to permit
+this, this message will simply be ignored.
+
+<h4>The server may send the following messages to the client presence of the
+Session object:</h4>
+
+<h3>make</h3>
+
+<p>The server will send <code>"make"</code> messages to the session to direct
+it to create client presences of context objects (within a context, successive
+<code>"make"</code> messages will be directed to the context object itself to
+generate the in-context user object and the other objects contained by the
+context).  The <code>"make"</code> message is generic.  It is described <a
+href="#msgmake">below</a>.
+
+<h3>exit</h3>
+
+<div class="indent"><code>
+ &larr; { to:"session", op:"exit",
+      why:<i>?STR</i>,
+      whycode:<i>STR</i>,
+      reload:<i>?BOOL</i> }
+</code></div>
+
+<p>This message informs the client that it is being disconnected from the
+server.  After this message is sent, the server will close the connection.
+This may be sent in reply to a <code>"disconnect"</code> message sent by the
+client to the server, but it may also be sent spontaneously as a result of
+events happening on the server.
+
+<ul>
+<li><code>why</code> is an optional debug string that describes the reason for
+the disconnection.</li>
+
+<li><code>whycode</code> is a machine-readable tag string that indicates the
+reason for the disconnection.</li>
+
+<p>The possible values for <code>whycode</code> and what they mean:</p>
+<table>
+<tr><td><code>"shutdown"</code></td>
+<td>server is shutting down</td></tr>
+<tr><td><code>"dupentry"</code></td>
+<td>you were already here</td></tr>
+<tr><td><code>"full"</code></td>
+<td>context is full</td></tr>
+<tr><td><code>"nores"</code></td>
+<td>you needed a reservation and didn't provide one</td></tr>
+<tr><td><code>"badres"</code></td>
+<td>your reservation was expired or no good</td></tr>
+<tr><td><code>"baduser"</code></td>
+<td>invalid user ref, invalid or missing user record, or unable to determine user from <code>uparam</code> parameters</td></tr>
+<tr><td><code>"badcontext"</code></td>
+<td>invalid context ref, or invalid or missing context record</td></tr>
+<tr><td><code>"timeout"</code></td>
+<td>you took too long before sending <code>entercontext</code></td></tr>
+<tr><td><code>"nodir"</code></td>
+<td>no director available (for push)</td></tr>
+<tr><td><code>"admin"</code></td>
+<td>administrative eviction</td></tr>
+<tr><td><code>"dirdeny"</code></td>
+<td>director denied reservation (for push)</td></tr>
+<tr><td><code>"dirfail"</code></td>
+<td>director failed (for push)</td></tr>
+<tr><td><code>"contextclose"</code></td>
+<td>context is shutting down</td></tr>
+<tr><td><code>"restricted"</code></td>
+<td>entry to context is restricted</td></tr>
+<tr><td><code>"noanonymity"</code></td>
+<td>context does not allow anonymous users</td></tr>
+<tr><td><code>"gateclosed"</code></td>
+<td>context is closed to entry for application-specific reasons</td></tr>
+<tr><td><code>"bye"</code></td>
+<td>you exited normally on purpose</td></tr>
+</table><p>
+
+<li><code>reload</code> is an optional flag (if omitted, defaults to false)
+that, if true, directs the client to immediately attempt another entry to the
+same context.  If the context was entered by obtaining a reservation from a
+Director, the client should first obtain a new reservation.</li>
+</ul>
+
+
+<a name="msgsgeneric"></a><h2>Generic messages</h2>
+
+<p>The server may send the following messages to any C-U-I object:
+
+<h3>make</h3><a name="msgmake"></a>
+
+<div class="indent"><code>
+ &larr; { to:<i>CONTAINERREF_STR</i>, op:"make",
+      maker:<i>?USERREF_STR</i>,
+      obj:<i>OBJDESC</i>,
+      you:<i>?BOOL</i>,
+      sess:<i>?STR</i> }
+</code></div>
+
+<p>This message directs the client to create a client presence of a C-U-I
+object.  The target of the message is the container into which the object
+should be created.  If this container is <code>"session"</code>, then the new
+object will be "contained" by the session; as a rule, the only objects that
+will be belong to the session in this way are the contexts themselves.  Users
+will be contained by context objects, while items may be contained by contexts,
+by users, or by other items.
+
+<ul>
+<li><code>maker</code> is an optional indicator of the user who is triggering
+the creation of the object.  Normally, this parameter will be omitted, in which
+case the object is presumed to be created by the system itself.  However, this
+parameter may appear if an object (normally an item) is being created as the
+consequence of a particular user's actions in the context.</li>
+
+<li><code>obj</code> is a JSON literal describing the object to be created.
+These are documented in more detail <a href="#objdescs">below</a>.</li>
+
+<li><code>you</code> is an optional flag that, if true (defaults to false if
+omitted), indicates that the object being created represents the user of the
+client receiving the message.
+
+<li><code>sess</code> is an optional client-in-context session identifier
+string.  This parameter will only be present when a context object is being
+created, and then only if there was a <code>sess</code> parameter provided in
+the <code>entercontext</code> message that led to this context creation event.
+The value will echo the value from the <code>entercontext</code> message,
+enabling the client to match the <code>make</code> message with its original
+<code>entercontext</code> request.
+
+</ul>
+
+<h3>delete</h3>
+
+<div class="indent"><code>
+ &larr; { to:<i>REF_STR</i>, op:"delete" }
+</code></div>
+
+<p>This message directs the client to delete its client presence of the C-U-I
+object that is the target of the message, as well as any other objects it may
+contain.  After this message is received, the targeted object no longer exists
+in the context environment, and messages sent to the server presence of the
+object will be rejected by the server.
+
+<h3>say</h3>
+
+<div class="indent"><code>
+ &larr; { to:<i>REF_STR</i>, op:"say",
+      from:<i>?USERREF_STR</i>, 
+      text:<i>STR</i> }
+</code></div>
+
+<p>This message is used to carry system messages and text chat.  It directs the
+client to display the text string that was transmitted, in a manner consistent
+with the application in the context.  The target of this message is always the
+context or a user, never an item.  If targeted at a user, the communication is
+for that user.  If targeted at the context, it is for all users in the context.
+(Note that a given client will only receive messages targeted at its own user
+or at the context.)
+
+<ul>
+<li><code>from</code>, if given, is the ref of (another) user who is
+represented by the server as the source of the message.  If omitted, the
+message is considered to come from the server itself.</li>
+
+<li><code>text</code> is the message being spoken.</li>
+</ul>
+
+<h3>push</h3>
+
+<div class="indent"><code>
+ &larr; { to:<i>REF_STR</i>, op:"push",
+      from:<i>?USERREF_STR</i>,
+      url:<i>STR</i>,
+      frame:<i>?STR</i> }
+</code></div>
+
+<p>This message directs the client to load a web page.  The target of this
+message is always the context or a user, never an item.  If targeted at a user,
+the intent is that that user is being pushed to the given URL.  If targeted at
+the context, all users in the context are being pushed.  (Note that a given
+client will only receive messages targeted at its own user or at the context.)
+
+<ul>
+<li><code>from</code>, if given, is the ref of (another) user who is
+represented by the server as the source of the push.  If omitted, it is
+considered to come from the server itself.</li>
+
+<li><code>url</code> is the URL to load.</li>
+
+<li><code>frame</code>, if given, names the browser HTML frame into which the
+URL is to be loaded.  If omitted, the URL should be loaded as an entirely new
+page.</li>
+</ul>
+
+<a name="objdescs"></a><h2>The Context Object</h2>
+
+<p>When a context is created by a <code>"make"</code> message, the
+<code>obj</code> parameter of the <code>"make"</code> message will be a context
+descriptor, which is a JSON object of the form:<p>
+
+<div class="indent"><code>
+    { type:"context", id:<i>CTXREF_STR</i>,
+      name:<i>STR</i>,
+      mods:[<i>MODDESC</i>] }
+</code></div>
+
+<p>
+<ul>
+<li><code>id</code> is the reference string for the new context.</li>
+
+<li><code>name</code> is the context's printable name, which may be significant
+in the application user interface.</li>
+
+<li><code>mods</code>, if present, is an array of mods attached to the context.
+Each of these is a JSON object describing a particular mod.  The form of these
+mod descriptors varies depending on what kind of mods they are.  The current
+set of supported mods is described <a href="clientmods.html">here</a>.</li>
+</ul>
+
+<p>Upon successful entry to a context (such as when the client sends an
+<code>entercontext</code> message to the server presence of the session
+object), the server will send a <code>"make"</code> message to the client
+presence of the session object, creating the client presence of the context
+itself.  This context object will then be sent one or more <code>"make"</code>
+messages creating client presences for the other users in the context and for
+any items contained by the context.  If any of these users or items have any
+contents of their own, additional <code>"make"</code> messages will be sent to
+those objects that create <i>their</i> content objects.  The end of this series
+of <code>"make"</code> messages will be indicated by the server sending a
+<code>"ready"</code> message to the context.  Finally, the server will send the
+context a <code>"make"</code> message creating the client presence of user who
+entered.
+
+<h3>ready</h3>
+
+<div class="indent"><code>
+ &larr; { to:<i>CTXREF_STR</i>, op:"ready" }
+</code></div>
+
+<p>This message signals to the client that the series of <code>"make"</code>
+messages generating the context and its contents is complete and that the
+context is ready for the client to interact with it.
+
+<h3>exit</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>CONTEXT_REF</i>, op:"exit" }
+</code></div>
+
+<p>This message removes the sending user from the context and terminates their
+interaction with it.
+
+<p>The context object may understand additional messages depending on what mods
+are attached to it.
+
+<h2>The User Object</h2>
+
+<p>When a user is created by a <code>"make"</code> message, the
+<code>obj</code> parameter of the <code>"make"</code> message will be a user
+descriptor, which is a JSON object of the form:<p>
+
+<div class="indent"><code>
+    { type:"user", id:<i>USERREF_STR</i>,
+      name:<i>STR</i>,
+      mods:[<i>MODDESC</i>] }
+</code></div>
+
+<p>
+<ul>
+<li><code>id</code> is the reference string for the new user.</li>
+
+<li><code>name</code> is the user's printable name.</li>
+
+<li><code>mods</code>, if present, is an array of mods attached to the user.
+Each of these is a JSON object describing a particular mod.  The form of these
+mod descriptors varies depending on what kind of mods they are.  The current
+set of supported mods is described <a href="clientmods.html">here</a>.</li>
+</ul>
+
+<h2>The Item Object</h2>
+
+<p>When an item is created by a <code>"make"</code> message, the
+<code>obj</code> parameter of the <code>"make"</code> message will be an item
+descriptor, which is a JSON object of the form:<p>
+
+<div class="indent"><code>
+    { type:"item",
+      id:<i>ITEMREF_STR</i>,
+      name:<i>STR</i>,
+      mods:[<i>MODDESC</i>],
+      cont:<i>?BOOL</i>,
+      deletable:<i>?BOOL</i> }
+</code></div>
+
+<p>
+<ul>
+<li><code>id</code> is the reference string for the new item.</li>
+
+<li><code>name</code> is the item's printable name.</li>
+
+<li><code>mods</code>, if present, is an array of mods attached to the item.
+Each of these is a JSON object describing a particular mod.  The form of these
+mod descriptors varies depending on what kind of mods they are.  The current
+set of supported mods is described <a href="clientmods.html">here</a>.</li>
+
+<li><code>cont</code> is a flag that, if true, indicates that the item may be
+used as a container (i.e., it may contain other items, even if it does not
+currently do so).  If omitted, it should be treated as false.</li>
+
+<li><code>deletable</code> is a flag that, if true, indicates that the item may
+be deleted by ordinary users by sending it a <code>"delete"</code> message.  If
+omitted, it should be treated as false.</li>
+</ul>
+
+<h3>delete</h3>
+
+<div class="indent"><code>
+ &rarr; { to:<i>ITEMREF_STR</i>, op:"delete" }
+</code></div>
+
+<p>A client may request the server to delete a deletable item by sending a
+<code>"delete"</code> message targeted at the item it wishes to delete.  If the
+server complies, it will send a delete message back (see <a
+href="#msgsgeneric">Generic Messages</a> above) directing the client to go
+ahead and delete the item.
+
+</div>
+</div>
+</body>
+</html>
