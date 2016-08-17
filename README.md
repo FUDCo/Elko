@@ -53,6 +53,9 @@ Elko is open source software, under the MIT license.  See the file `LICENSE.md`
 
 ## What's Here
 
+* `Build` -- contains top level build files; however, you probably want the
+  ones in `ServerCore/build` instead.
+
 * `ServerCore` -- contains the Elko server framework itself, along with its
   documentation.
 
