@@ -100,7 +100,7 @@ installable: $(COMPONENTS)
 
 
 %-build: $(@:%-build=%)
-	cd ../$(@:%-build=%)/build; make dist-terse
+	cd ../$(@:%-build=%)/build; make dist
 
 %-clean: $(@:%-clean=%)
 	cd ../$(@:%-clean=%)/build; make clean

@@ -103,7 +103,7 @@ JAVADOC_LINKS = $(JAVADOC_OPTS) \
   -tag internal:Xa:"Internal:" \
   -windowtitle "Elko Server Framework"
 
-JAR_FILES = $(JAR_DIR)/elkoserver.jar
+JAR_FILES = $(JAR_DIR)/elkoserver.jar $(JAR_DIR)/fakessl.jar
 
 CLASS_BUILD_MARKER = $(BUILT_DIR)/classbuildmarker
 
@@ -212,7 +212,11 @@ $(JAR_DIR)/elkoserver.jar: $(CLASS_BUILD_MARKER)
 	    `find $(CLA_ROOT)/json -name '*.class'` \
 	    `find $(CLA_ROOT)/objdb -name '*.class'` \
 	    `find $(CLA_ROOT)/server -name '*.class'` \
-	    `find $(CLA_ROOT)/util -name '*.class'` \
+	    `find $(CLA_ROOT)/util -name '*.class'`
+
+$(JAR_DIR)/fakessl.jar: $(CLASS_BUILD_MARKER)
+	$(RM) $@
+	cd $(CLA_DIR); jar cf ../$@ \
 	    `find scalablessl -name '*.class'`
 
 do-javadoc: generated

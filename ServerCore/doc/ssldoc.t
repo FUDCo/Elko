@@ -8,7 +8,7 @@ Configuring Elko servers for SSL support
                 http://www.telekinesis.com.au/wipv3_6/page2/show.jsp?id=230173&db=Entries
             This library provides full support for SSL in the Elko server.
 
-        fakessl.jar -- this is bundled with the Elko distribution.  This is a
+        fakessl.jar -- this is built in the Elko distribution.  This is a
             development and testing stub library. It provides no actual SSL
             support but allows the SSL-enabled server to load and run without
             unresolved class load errors as long as you don't actually
