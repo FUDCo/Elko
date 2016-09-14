@@ -5,12 +5,19 @@ of database for containing the persistent state of users, contexts, and items
 (hence its use as the repository for the metadata that allows these objects to
 be read into the server's memory).
 
-The shell script dbinit.sh (in the Scripts directory) will connect to the local
-MongoDB instance, initialize a database named 'elko', and populate it with
-the essential configuration data as well as a selection of default user,
+The shell script dbinit.sh (in the Build/Scripts directory) will connect to the
+local MongoDB instance, initialize a database named 'elko', and populate it
+with the essential configuration data as well as a selection of default user,
 context, and item objects to get you started.  As distributed, this script will
 connnect to the standard default MongoDB host and port (localhost, port 27017);
 if your MongoDB runs someplace else, you should modify this script accordingly.
+
+The dbinit.sh script is not included directly in the distribution, but gets
+built according to instructions in the Build/Makefile via the command 'make
+db'.  The resulting script will populate the database with objects described by
+JSON files found in the various component directories.
+
+---
 
 The file mongohelper.js contains an assortment of useful functions to be used
 within the MongoDB client shell to manipulate the database in accordance with
@@ -20,13 +27,9 @@ various conventions we use repeatedly. We recommend you define a shell alias:
 
 ---
 
-mongo.jar (2.4) is unmodified open source software and is provided here for
-convenience.
-
-It is strongly suggested that you go to http://mongodb.org to get the latest
-Java driver software version and replace this file with it.
-
-It is subject to the terms at http://mongodb.org.
+To run with MongoDB, you will need to have some version of the MongoDB Java
+"driver" on your class path.  These can be obtained at
+https://docs.mongodb.com/ecosystem/drivers/java
 
 ---
 

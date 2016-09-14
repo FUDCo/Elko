@@ -122,13 +122,12 @@ DB_FILES = ../run/db/mongo.jar \
 
 copy-core:
 	cp $(JAR_FILES) $(TEMP_DIR)
-	cp License.txt $(TEMP_DIR)
-	cp ../run/start.* $(TEMP_DIR)
-	cp ../run/*.example $(TEMP_DIR)
-	cp ../run/setenvvars $(TEMP_DIR)
+	#cp ../run/start.* $(TEMP_DIR)
+	#cp ../run/*.example $(TEMP_DIR)
+	#cp ../run/setenvvars $(TEMP_DIR)
 	echo "echo '#Replace this file with your customized version of setlocvars.example'; return 1" >$(TEMP_DIR)/setlocvars
 	mkdir -p $(TEMP_DIR)/db
-	cp -r $(DB_FILES) $(TEMP_DIR)/db
+	#cp -r $(DB_FILES) $(TEMP_DIR)/db
 
 copy-docs:
 	cp -rf $(JAVADOC_DIR) $(TEMP_DIR)

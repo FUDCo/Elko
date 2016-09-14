@@ -189,7 +189,7 @@ EXAMPLE_DIR = ../Example
 
 # Gather the SDK package contents
 do-sdk: do-sdk-deploy javadoc
-	cp LICENSE.txt $(PKG_DIR)
+	cp ../LICENSE.md $(PKG_DIR)
 	mkdir $(PKG_DIR)/Doc
 	cp $(DOC_FILES:%=$(DOC_DIR)/%) $(PKG_DIR)/Doc
 	cp -rf $(JAVADOC_DIR) $(PKG_DIR)/Doc/javadoc
@@ -279,7 +279,6 @@ do-core-deploy: do-build db
 
 # Run environments for organization internal use only
 RUN_ENVS_PRIVATE = \
-    run.chipdev \
     run.full_production
 
 # Gather the deployment package contents that are strictly internal

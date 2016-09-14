@@ -90,7 +90,7 @@ function egetu(uref) {
 }
 
 function emod(obj, mtype) {
-    for each (var mod in obj.mods) {
+    for (var mod in obj.mods) {
         if (mod.type == mtype) {
             return mod;
         }
@@ -184,7 +184,7 @@ function iholders(iref) {
 
 function idrop(iref) {
     var holders = iholders(iref);
-    for each (var uref in holders) {
+    for (var uref in holders) {
         var user = egetu(uref);
         for (var i = 0; i < user.ref$contents.length; ++i) {
             if (user.ref$contents[i] == iref) {

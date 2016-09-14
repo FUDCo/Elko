@@ -90,6 +90,9 @@ CLASS_BUILD_MARKER = $(BUILT_DIR)/classbuildmarker
 
 all: base-build finish
 
+installable:
+	@echo
+
 javadoc: do-javadoc finish
 
 dist-terse: all
@@ -144,6 +147,6 @@ clean:
 $(CLA_DIR)/%.class: $(JAV_DIR)/%.java
 	touchp $@
 
-.PHONY: all javadoc dist generated finish do-javadoc base-build clean
+.PHONY: all javadoc dist generated finish do-javadoc base-build clean installable
 
 -include $(ALL_DEP)
