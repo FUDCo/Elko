@@ -1,23 +1,19 @@
-#!/bin/csh
+#!/bin/bash
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=Director
-endif
+SERVER_NAME=${SERVER_NAME:-Director}
 
-if (! ${?LOG_TAG}) then
-   set LOG_TAG=dire
-endif
+LOG_TAG=${LOG_TAG:-dire}
 
-set SERVER_HOST=${HOST}
-set SERVER_BIND=${HOST}
+SERVER_HOST=${HOST}
+SERVER_BIND=${HOST}
 
-@ PORT_CLIENT_TCP  = ${DIRE_PORT_BASE}
-@ PORT_CLIENT_RTCP = ${DIRE_PORT_BASE} + 1
-@ PORT_SERVER_TCP  = ${DIRE_PORT_BASE} + 2
+PORT_CLIENT_TCP=$((  DIRE_PORT_BASE     ))
+PORT_CLIENT_RTCP=$(( DIRE_PORT_BASE + 1 ))
+PORT_SERVER_TCP=$((  DIRE_PORT_BASE + 2 ))
 
-@ BROKER_PORT = ${BROK_PORT_BASE} + 1
+BROKER_PORT=$(( BROK_PORT_BASE + 1 ))
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_dire=EVENT \
@@ -43,7 +39,7 @@ ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    conf.listen2.allow=any \
    conf.listen2.protocol=tcp \
    \
-#   conf.broker.host=${SERVER_HOST}:${BROKER_PORT} \
+   `#conf.broker.host=${SERVER_HOST}:${BROKER_PORT}` \
    \
    conf.director.name=${SERVER_NAME} \
    conf.comm.jsonstrictness=true \

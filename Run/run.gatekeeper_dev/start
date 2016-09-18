@@ -1,20 +1,18 @@
-#!/bin/csh
+#!/bin/bash
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=Gatekeeper
-endif
+SERVER_NAME=${SERVER_NAME:-Gatekeeper}
 
-#set SERVER_HOST=${HOST}.${DOMAIN}
-set SERVER_HOST=${HOST}
-set SERVER_BIND=${HOST}
+#SERVER_HOST=${HOST}.${DOMAIN}
+SERVER_HOST=${HOST}
+SERVER_BIND=${HOST}
 
-@ PORT_OPEN = ${GATE_PORT_BASE}
-@ PORT_PSWD = ${GATE_PORT_BASE} + 1
+PORT_OPEN=$(( GATE_PORT_BASE     ))
+PORT_PSWD=$(( GATE_PORT_BASE + 1 ))
 
-@ DPORT = ${DIRE_PORT_BASE}
-@ BPORT = ${BROK_PORT_BASE}
+DPORT=${DIRE_PORT_BASE}
+BPORT=${BROK_PORT_BASE}
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_gate=EVENT \
@@ -36,7 +34,7 @@ ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    conf.listen1.allow=admin \
    \
    conf.gate.director.host=${SERVER_HOST}:${DPORT} \
-#   conf.gate.director.auto=true \
+   `#conf.gate.director.auto=true` \
    \
    conf.gate.odb=mongo \
    conf.gate.odb.mongo.hostport=${MONGOHOST} \

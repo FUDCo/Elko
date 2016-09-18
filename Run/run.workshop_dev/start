@@ -1,22 +1,18 @@
-#!/bin/csh
+#!/bin/bash
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=Workshop
-endif
+SERVER_NAME=${SERVER_NAME:-Workshop}
 
-if (! ${?LOG_TAG}) then
-   set LOG_TAG=work
-endif
+LOG_TAG=${LOG_TAG:-work}
 
-set SERVER_HOST=${HOST}
-set SERVER_BIND=${HOST}
+SERVER_HOST=${HOST}
+SERVER_BIND=${HOST}
 
-@ PORT_OPEN = ${WORK_PORT_BASE}
-@ PORT_PSWD = ${WORK_PORT_BASE} + 1
+PORT_OPEN=$(( WORK_PORT_BASE     ))
+PORT_PSWD=$(( WORK_PORT_BASE + 1 ))
 
-@ BROKER_PORT = ${BROK_PORT_BASE} + 1
+BROKER_PORT=$(( BROK_PORT_BASE + 1 ))
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_work=EVENT \

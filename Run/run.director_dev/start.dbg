@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/sh
 
-setenv JAVA_RUN jdb
+export JAVA_RUN=jdb
 ./start

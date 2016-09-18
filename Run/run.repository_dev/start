@@ -1,18 +1,16 @@
-#!/bin/csh
+#!/bin/bash
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=Repository
-endif
+SERVER_NAME=${SERVER_NAME:-Repository}
 
-set SERVER_HOST=${HOST}.${DOMAIN}
-set SERVER_BIND=${HOST}
+SERVER_HOST=${HOST}.${DOMAIN}
+SERVER_BIND=${HOST}
 
-@ PORT_OPEN = ${REPO_PORT_BASE}
-@ PORT_PSWD = ${REPO_PORT_BASE} + 1
+PORT_OPEN=$(( REPO_PORT_BASE     ))
+PORT_PSWD=$(( REPO_PORT_BASE + 1 ))
 
-@ BPORT = ${BROK_PORT_BASE}
+BPORT=${BROK_PORT_BASE}
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_repo=EVENT \
@@ -23,15 +21,15 @@ ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    conf.repository.odb=odb-test \
    conf.listen.host=${SERVER_HOST}:${PORT_OPEN} \
    conf.listen.bind=${SERVER_BIND}:${PORT_OPEN} \
-#   conf.listen.host=${SERVER_HOST} \
-#   conf.listen.bind=${SERVER_BIND} \
+   `#conf.listen.host=${SERVER_HOST}` \
+   `#conf.listen.bind=${SERVER_BIND}` \
    conf.listen.protocol=tcp \
    conf.listen.auth.mode=open \
    conf.listen.allow=any \
    conf.listen1.host=${SERVER_HOST}:${PORT_PSWD} \
    conf.listen1.bind=${SERVER_BIND}:${PORT_PSWD} \
-#   conf.listen1.host=${SERVER_HOST} \
-#   conf.listen1.bind=${SERVER_BIND} \
+   `#conf.listen1.host=${SERVER_HOST}` \
+   `#conf.listen1.bind=${SERVER_BIND}` \
    conf.listen1.protocol=tcp \
    conf.listen1.auth.mode=password \
    conf.listen1.auth.code=secret \

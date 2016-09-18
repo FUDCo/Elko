@@ -1,17 +1,15 @@
-#!/bin/csh
+#!/bin/bash
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=PresenceServer
-endif
+SERVER_NAME=${SERVER_NAME:-PresenceServer}
 
-#set SERVER_HOST=${HOST}.${DOMAIN}
-set SERVER_HOST=${HOST}
-set SERVER_BIND=${HOST}
+#SERVER_HOST=${HOST}.${DOMAIN}
+SERVER_HOST=${HOST}
+SERVER_BIND=${HOST}
 
-@ PORT_OPEN = ${PRE_PORT_BASE}
-@ PORT_PSWD = ${PRE_PORT_BASE} + 1
+PORT_OPEN=$(( PRES_PORT_BASE     ))
+PORT_PSWD=$(( PRES_PORT_BASE + 1 ))
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_pres=EVENT \

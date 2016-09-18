@@ -2,15 +2,13 @@
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=Director
-endif
+SERVER_NAME=${SERVER_NAME:-Director}
 
-set SERVER_HOST=${HOST}
-set SERVER_BIND=${HOST}
+SERVER_HOST=${HOST}
+SERVER_BIND=${HOST}
 
-@ PORT_OPEN = ${DIRE_PORT_BASE}
-@ PORT_PSWD = ${DIRE_PORT_BASE} + 1
+PORT_OPEN=$(( DIRE_PORT_BASE     ))
+PORT_PSWD=$(( DIRE_PORT_BASE + 1 ))
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_dire=DEBUG \

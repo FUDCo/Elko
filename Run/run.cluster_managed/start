@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/sh
 source start.broker &
 sleep 5
 source start.gatekeeper &

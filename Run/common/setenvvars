@@ -24,7 +24,7 @@ HOST=${HOST:-`hostname`}
 
 BIND=${BIND:-${HOST}}
 
-MONGOHOST=${MONGOHOST:-127.0.0.1:27017}
+MONGOHOST=${MONGOHOST:-localhost:27017}
 
 TRACE_DIR=${TRACE_DIR:-.}
 
@@ -48,7 +48,7 @@ DIRE_PORT_BASE=${DIRE_PORT_BASE:-$((${PORT_BASE} + 60))}
 
 JAVA_RUN=${JAVA_RUN:-"java -server -Xconcurrentio"}
 
-SERVER_JARS=${DISTI}/elkoserver.jar${DELIM}${DISTE}/mongo.jar${DELIM}${DISTE}/ScalableSSL.jar${DELIM}${DISTI}/fakessl.jar
+SERVER_JARS=${DISTI}/elkoserver.jar${DELIM}${DISTE}/mongo.jar${DELIM}${DISTE}/commons-codec.jar${DELIM}${DISTE}/ScalableSSL.jar${DELIM}${DISTI}/fakessl.jar
 
 if [ ! $CLASSPATH ]; then
   export CLASSPATH="${SERVER_JARS}"

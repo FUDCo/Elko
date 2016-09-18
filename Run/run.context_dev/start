@@ -1,45 +1,41 @@
-#!/bin/csh
+#!/bin/bash
 
 source ../common/setenvvars
 
-if (! ${?SERVER_NAME}) then
-   set SERVER_NAME=ContextServer
-endif
+SERVER_NAME=${SERVER_NAME:-ContextServer}
 
-if (! ${?LOG_TAG}) then
-   set LOG_TAG=contlog
-endif
+LOG_TAG=${LOG_TAG:-contlog}
 
-#set SERVER_HOST=${HOST}.${DOMAIN}
-set SERVER_HOST=${HOST}
-set SERVER_BIND=${HOST}
+#SERVER_HOST=${HOST}.${DOMAIN}
+SERVER_HOST=${HOST}
+SERVER_BIND=${HOST}
 
-@ PORT_OPEN_TCP  = ${CONT_PORT_BASE}
-@ PORT_OPEN_HTTP = ${CONT_PORT_BASE} + 1
-@ PORT_OPEN_RTCP = ${CONT_PORT_BASE} + 2
-@ PORT_RESV_TCP  = ${CONT_PORT_BASE} + 3
-@ PORT_RESV_HTTP = ${CONT_PORT_BASE} + 4
-@ PORT_RESV_RTCP = ${CONT_PORT_BASE} + 5
-@ PORT_INTERNAL  = ${CONT_PORT_BASE} + 6
-@ PORT_INTERNAL2 = ${CONT_PORT_BASE} + 7
-#@ PORT_OPEN_WS   = ${CONT_PORT_BASE} + 8
-@ PORT_OPEN_WS   = 8000
+PORT_OPEN_TCP=$((  CONT_PORT_BASE     ))
+PORT_OPEN_HTTP=$(( CONT_PORT_BASE + 1 ))
+PORT_OPEN_RTCP=$(( CONT_PORT_BASE + 2 ))
+PORT_RESV_TCP=$((  CONT_PORT_BASE + 3 ))
+PORT_RESV_HTTP=$(( CONT_PORT_BASE + 4 ))
+PORT_RESV_RTCP=$(( CONT_PORT_BASE + 5 ))
+PORT_INTERNAL=$((  CONT_PORT_BASE + 6 ))
+PORT_INTERNAL2=$(( CONT_PORT_BASE + 7 ))
+#PORT_OPEN_WS=$((  CONT_PORT_BASE + 8 ))
+PORT_OPEN_WS=8000
 
-@ DPORT = ${DIRE_PORT_BASE}
-@ BPORT = ${BROK_PORT_BASE}
-@ RPORT = ${REPO_PORT_BASE}
-@ PPORT = ${PRES_PORT_BASE}
+DPORT=${DIRE_PORT_BASE}
+BPORT=${BROK_PORT_BASE}
+RPORT=${REPO_PORT_BASE}
+PPORT=${PRES_PORT_BASE}
 
 ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    trace_cont=EVENT \
    trace_comm=EVENT \
    tracelog_tag=${LOG_TAG} \
    tracelog_dir=${TRACE_DIR} \
-#   tracelog_rollover=daily \
+   `#tracelog_rollover=daily` \
    \
-#   conf.comm.httptimeout=3000 \
+   `#conf.comm.httptimeout=3000` \
    conf.comm.httptimeout=15 \
-#   conf.comm.httpselectwait=300 \
+   `#conf.comm.httpselectwait=300` \
    conf.comm.httpselectwait=60 \
    conf.comm.rtcptimeout=300 \
    conf.comm.rtcpdisconntimeout=60 \
@@ -71,37 +67,37 @@ ${JAVA_RUN} org.elkoserver.foundation.boot.Boot \
    conf.listen4.protocol=ws \
    conf.listen4.sock=test \
    \
-#   conf.listen4.host=SUB:${SERVER_HOST}:${PORT_INTERNAL2} \
-#   conf.listen4.bind=SUB:${SERVER_BIND}:${PORT_INTERNAL2} \
-#   conf.listen4.protocol=zmq \
-#   conf.listen4.class=org.elkoserver.foundation.net.zmq.ZeroMQConnectionManager \
-#   conf.listen4.allow=internal \
-#   conf.listen4.auth.mode=password \
-#   conf.listen4.auth.code=secret \
+   `#conf.listen4.host=SUB:${SERVER_HOST}:${PORT_INTERNAL2}` \
+   `#conf.listen4.bind=SUB:${SERVER_BIND}:${PORT_INTERNAL2}` \
+   `#conf.listen4.protocol=zmq` \
+   `#conf.listen4.class=org.elkoserver.foundation.net.zmq.ZeroMQConnectionManager` \
+   `#conf.listen4.allow=internal` \
+   `#conf.listen4.auth.mode=password` \
+   `#conf.listen4.auth.code=secret` \
    \
-#   conf.listen4.host=${SERVER_HOST}:${PORT_RESV_TCP} \
-#   conf.listen4.bind=${SERVER_BIND}:${PORT_RESV_TCP} \
-#   conf.listen4.protocol=tcp \
-#   conf.listen4.auth.mode=reservation \
+   `#conf.listen4.host=${SERVER_HOST}:${PORT_RESV_TCP}` \
+   `#conf.listen4.bind=${SERVER_BIND}:${PORT_RESV_TCP}` \
+   `#conf.listen4.protocol=tcp` \
+   `#conf.listen4.auth.mode=reservation` \
    \
-#   conf.listen5.host=${SERVER_HOST}:${PORT_RESV_RTCP} \
-#   conf.listen5.bind=${SERVER_BIND}:${PORT_RESV_RTCP} \
-#   conf.listen5.protocol=rtcp \
-#   conf.listen5.auth.mode=reservation \
+   `#conf.listen5.host=${SERVER_HOST}:${PORT_RESV_RTCP}` \
+   `#conf.listen5.bind=${SERVER_BIND}:${PORT_RESV_RTCP}` \
+   `#conf.listen5.protocol=rtcp` \
+   `#conf.listen5.auth.mode=reservation` \
    \
-#   conf.listen6.host=${SERVER_HOST}:${PORT_RESV_HTTP} \
-#   conf.listen6.bind=${SERVER_BIND}:${PORT_RESV_HTTP} \
-#   conf.listen6.protocol=http \
-#   conf.listen6.domain=${DOMAIN} \
-#   conf.listen6.root=test \
-#   conf.listen6.auth.mode=reservation \
+   `#conf.listen6.host=${SERVER_HOST}:${PORT_RESV_HTTP}` \
+   `#conf.listen6.bind=${SERVER_BIND}:${PORT_RESV_HTTP}` \
+   `#conf.listen6.protocol=http` \
+   `#conf.listen6.domain=${DOMAIN}` \
+   `#conf.listen6.root=test` \
+   `#conf.listen6.auth.mode=reservation` \
    \
-#   conf.register.auto=true \
-#   conf.register.host=${SERVER_HOST}:${DPORT} \
-#   conf.load.time=300 \
-#   conf.context.reservationexpire=300 \
+   `#conf.register.auto=true` \
+   `#conf.register.host=${SERVER_HOST}:${DPORT}` \
+   `#conf.load.time=300` \
+   `#conf.context.reservationexpire=300` \
    \
-#   conf.presence.host=${SERVER_HOST}:${PPORT} \
+   `#conf.presence.host=${SERVER_HOST}:${PPORT}` \
    \
    conf.broker.host=${SERVER_HOST}:${BPORT} \
    \
