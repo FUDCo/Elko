@@ -32,15 +32,15 @@ public class BootProperties extends Properties
     }
 
     /**
-     * Get the value of a property as a boolean.
+     * Get the value of a property as a boolean.  This will be true if the
+     * property value is the string "true", false if the property value is
+     * the string "false", and will be the default if the property value is
+     * anything else or if the property is absent.
      *
      * @param property  The name of the property to test.
      * @param defaultValue  The default value in the event of absence or error.
      *
      * @return the value of the property interpreted as a boolean.
-     *
-     * @throws IllegalArgumentException if the property has a value that is
-     *    neither of the strings "true" nor "false".
      */
     public boolean boolProperty(String property, boolean defaultValue) {
         String val = getProperty(property);
