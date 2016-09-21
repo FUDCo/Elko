@@ -211,7 +211,8 @@ $(JAR_DIR)/elkoserver.jar: $(CLASS_BUILD_MARKER)
 	    `find $(CLA_ROOT)/json -name '*.class'` \
 	    `find $(CLA_ROOT)/objdb -name '*.class'` \
 	    `find $(CLA_ROOT)/server -name '*.class'` \
-	    `find $(CLA_ROOT)/util -name '*.class'`
+	    `find $(CLA_ROOT)/util -name '*.class'` \
+	    `find scalablessl -name '*.class'`
 
 $(JAR_DIR)/fakessl.jar: $(CLASS_BUILD_MARKER)
 	$(RM) $@
