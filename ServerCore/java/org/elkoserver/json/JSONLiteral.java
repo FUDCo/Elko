@@ -602,6 +602,16 @@ public class JSONLiteral {
     public int length() {
         return myEndPos - myStartPos;
     }
+    
+    /**
+     * Find out from what the current encoding value is.
+     * 
+     * @return The value of myControl
+     */
+    
+    public EncodeControl control() {
+    	return myControl;
+    }
 
     /**
      * Obtain a string representation of this literal suitable for output to a
