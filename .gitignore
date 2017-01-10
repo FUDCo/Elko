@@ -1,1 +1,6 @@
 Distrib
+bin
+.project
+.classpath
+.settings
+lib
