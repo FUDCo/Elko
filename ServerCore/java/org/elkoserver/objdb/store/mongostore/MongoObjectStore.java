@@ -24,6 +24,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import org.bson.types.ObjectId;
 import java.net.UnknownHostException;
@@ -98,7 +99,7 @@ public class MongoObjectStore implements ObjectStore {
         }
         try {
             myMongo = new Mongo(host, port);
-        } catch (UnknownHostException e) {
+        } catch (MongoException e) {
             tr.fatalError("mongodb server " + addressStr + ": unknown host");
         }
         String dbName = props.getProperty(propRoot + ".dbname", "elko");
@@ -326,10 +327,6 @@ public class MongoObjectStore implements ObjectStore {
                 DBObject objectToWrite = jsonLiteralToDBObject(obj, ref);
                 if (requireNew) {
                     WriteResult wr = collection.insert(objectToWrite);
-                    String error = wr.getError();
-                    if (error != null) {
-                        failure = error;
-                    }
                 } else {
                     DBObject query = new BasicDBObject();
                     query.put("ref", ref);

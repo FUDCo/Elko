@@ -1,6 +1,7 @@
 Distrib
+target
 bin
+lib
 .project
 .classpath
 .settings
-lib
