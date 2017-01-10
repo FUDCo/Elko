@@ -1,2 +1,4 @@
 Distrib
 target
+
+ServerCore/java/org/elkoserver/foundation/server/BuildVersion.java
