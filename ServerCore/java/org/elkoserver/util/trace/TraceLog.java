@@ -30,9 +30,6 @@ class TraceLog implements TraceMessageAcceptor {
     /** Flag controlling whether a log file should be written at all. */
     private boolean amWriteEnabled = false;
 
-    /** Flag controlling whether log messages should be sent to stderr. */
-    private boolean logToStderr = false;
-
     /** Log file size above which the file will be rolled over, in chars. */
     private long myMaxSize = STARTING_LOG_SIZE_THRESHOLD;
 
@@ -106,24 +103,20 @@ class TraceLog implements TraceMessageAcceptor {
     private void outputMessage(TraceMessage message) {
         message.stringify(myStringBuffer);
         String output = myStringBuffer.toString();
-        if (logToStderr) {
-            System.err.println(output);
-        } else {
-            myCurrent.stream.println(output);
-            /* Note: there's little point in checking for an output error.  We
-               can't put the trace in the log, and there's little chance the user
-               would see it in the trace buffer.  So we ignore it, with regret. */
+        myCurrent.stream.println(output);
+        /* Note: there's little point in checking for an output error.  We
+           can't put the trace in the log, and there's little chance the user
+           would see it in the trace buffer.  So we ignore it, with regret. */
 
-            myCurrentSize += output.length() + LINE_SEPARATOR_LENGTH;
-            if (myCurrentSize > myMaxSize) {
-                rolloverLogFile("This log is full.");
-            } else if (myNextRolloverTime != 0 &&
-                       myNextRolloverTime < message.timestamp()) {
-                do {
-                    myNextRolloverTime += myRolloverFrequency;
-                } while (myNextRolloverTime < message.timestamp());
-                rolloverLogFile("The time has come for a new log file.");
-            }
+        myCurrentSize += output.length() + LINE_SEPARATOR_LENGTH;
+        if (myCurrentSize > myMaxSize) {
+            rolloverLogFile("This log is full.");
+        } else if (myNextRolloverTime != 0 &&
+                   myNextRolloverTime < message.timestamp()) {
+            do {
+                myNextRolloverTime += myRolloverFrequency;
+            } while (myNextRolloverTime < message.timestamp());
+            rolloverLogFile("The time has come for a new log file.");
         }
     }
 
@@ -299,13 +292,6 @@ class TraceLog implements TraceMessageAcceptor {
      */
     private void changeTag(String value) {
         myPending.setTag(value);
-    }
-
-    /**
-     * Sets the tracing log to output to stderr if the user so desires.
-     */
-    private void changeLogToStderr(String value) {
-        logToStderr = Boolean.parseBoolean(value);
     }
 
     /**
@@ -524,8 +510,6 @@ class TraceLog implements TraceMessageAcceptor {
             changeRollover(value);
         } else if (name.equalsIgnoreCase("versions")) {
             changeVersionFileHandling(value);
-        } else if (name.equalsIgnoreCase("stderr")) {
-            changeLogToStderr(value);
         } else if (name.equalsIgnoreCase("reopen")) {
             reopen(value);
         } else {
