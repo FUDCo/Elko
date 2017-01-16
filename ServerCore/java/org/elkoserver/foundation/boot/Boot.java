@@ -95,7 +95,7 @@ public class Boot extends Thread {
      * required to be public by Java's scoping rules, but you should not call
      * it yourself.
      *
-     * @internal Java's rules don't allow you to declare run() to throw any
+     * Java's rules don't allow you to declare run() to throw any
      * exceptions, so this just wraps a call to the private method
      * startApplication() in a try/catch block.  The guts of startup are in
      * another method for improved legibility.

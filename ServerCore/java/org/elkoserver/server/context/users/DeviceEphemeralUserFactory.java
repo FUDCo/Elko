@@ -30,13 +30,13 @@ public class DeviceEphemeralUserFactory extends DevicePersistentUserFactory {
    *
    * @param contextor  The contextor of the server in which the synthetic
    *    user will be present
-     * @param connection  The connection over which the new user presented
-     *    themself.
+   * @param connection  The connection over which the new user presented
+   *    themself.
    * @param param  Arbitary JSON object parameterizing the construction.
    * @param handler  Handler to invoke with the resulting user object, or
    *    with null if the user object could not be produced.
    */
-    public void provideUser(Contextor contextor, Connection connnection,
+    public void provideUser(Contextor contextor, Connection connection,
                             JSONObject param, ArgRunnable handler)
     {
         DeviceCredentials creds =

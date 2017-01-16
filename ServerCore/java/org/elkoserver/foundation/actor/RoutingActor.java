@@ -17,7 +17,7 @@ import org.elkoserver.util.trace.Trace;
  * org.elkoserver.foundation.net.MessageHandler#processMessage processMessage()}
  * method, but subclasses must implement {@link
  * org.elkoserver.foundation.net.MessageHandler#connectionDied connectionDied()}
- * method (as well as any {@link JSONMethod} methods for whatever specific
+ * method (as well as any {@link org.elkoserver.foundation.json.JSONMethod} methods for whatever specific
  * object behavior the subclass is intended for).
  */
 abstract public class RoutingActor extends Actor implements DispatchTarget

@@ -12,8 +12,10 @@ package org.elkoserver.foundation.json;
  * declare themselves as implementing this interface, since the normal coding
  * pattern for such things is to subclass a standard base class (such as {@link
  * org.elkoserver.server.context.BasicObject BasicObject}, {@link
- * org.elkoserver.server.context.Mod Mod}, {@link BasicProtocolHandler}, or
- * {@link NonRoutingActor}) that already implements it.
+ * org.elkoserver.server.context.Mod Mod},
+ * {@link org.elkoserver.foundation.actor.BasicProtocolHandler BasicProtocolHandler}, or
+ * {@link org.elkoserver.foundation.actor.NonRoutingActor NonRoutingActor})
+ * that already implements it.
  */
 public interface DispatchTarget {
 }
