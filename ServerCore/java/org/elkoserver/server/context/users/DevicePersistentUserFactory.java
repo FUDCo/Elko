@@ -36,7 +36,7 @@ public class DevicePersistentUserFactory implements UserFactory {
     /**
      * Obtain the name of the device this factory works with.
      *
-     * @param return this factory's device string.
+     * @return this factory's device string.
      */
     public String getDevice() {
         return myDevice;

@@ -122,11 +122,11 @@ public class ChunkyByteArrayInputStream extends InputStream {
      * use of the contents of the byte buffer that is given to this method
      * (i.e., without copying it to internal storage) until {@link
      * #preserveBuffers} is called; after that, the buffer contents may be
-     * modifed externally.  This is somewhat delicate, but eliminates a vast
-     * amount of unnecessary byte array allocation and copying.
+     * modified externally.  This is somewhat delicate, but eliminates a vast
+     * amount of unnecessary byte array allocation and copying.</p>
      *
      * @param buf  The bytes themselves.
-     * @param length  Number of bytes in 'buf' to read (<= buf.length).
+     * @param length  Number of bytes in 'buf' to read (&lt;= buf.length).
      */
     public void addBuffer(byte[] buf, int length) {
         if (Trace.comm.debug && Trace.ON) {

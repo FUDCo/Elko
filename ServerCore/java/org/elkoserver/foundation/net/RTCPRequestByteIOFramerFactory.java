@@ -8,7 +8,7 @@ import org.elkoserver.util.trace.Trace;
 
 /**
  * Byte I/O framer factory for RTCP requests.  The framing rule used is: read
- * one line & interpret it as an RTCP request line.  If the request is not a
+ * one line &amp; interpret it as an RTCP request line.  If the request is not a
  * message delivery, then framing is complete at this point.  If it *is* a
  * message delivery, then continue, following exactly the message framing rule
  * implemented by the {@link
@@ -20,11 +20,11 @@ import org.elkoserver.util.trace.Trace;
  * matching the JSON framing rule is regarded as a parseable unit; that is, it
  * is expected to contain one or more syntactically complete JSON messages.
  * The entire block is read into an internal buffer, then parsed for JSON
- * messages that are fed to the receiver.
+ * messages that are fed to the receiver.</p>
  *
  * <p>On output, each thing being sent is always in the form of a string by the
  * time this class gets its hands on it, so output framing consists of merely
- * ensuring that the proper character encoding is used.
+ * ensuring that the proper character encoding is used.</p>
  */
 public class RTCPRequestByteIOFramerFactory implements ByteIOFramerFactory {
     /** Trace object for logging message traffic. */
