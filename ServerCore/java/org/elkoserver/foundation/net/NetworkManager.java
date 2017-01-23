@@ -287,7 +287,7 @@ public class NetworkManager {
      * @param framerFactory  Byte I/O framer factory for the new connection.
      * @param secure  If true, use SSL.
      * @param portTrace  Trace object for logging activity associated with this
-     *   port & its connections
+     *   port &amp; its connections
      *
      * @return the address that ended up being listened upon
      */

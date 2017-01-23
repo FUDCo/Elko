@@ -17,7 +17,6 @@ abstract public class ExcludingIterator<V> implements Iterator<V> {
      * Constructor.
      *
      * @param base  The underlying iterator.
-     * @param exclusion  The distinguished element to exclude.
      */
     public ExcludingIterator(Iterator<V> base) {
         myBase = base;
