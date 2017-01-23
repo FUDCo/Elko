@@ -242,6 +242,7 @@ public class User extends BasicObject implements Deliverer {
             myGroup.admitMember(this);
             myContext.attachUserMods(this);
             objectIsComplete();
+            myContextor.notifyPendingObjectCompletionWatchers();
             sendUserDescription(this, context, true);
             if (!myContext.isSemiPrivate()) {
                 sendUserDescription(neighbors(), context, false);

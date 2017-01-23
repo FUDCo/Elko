@@ -89,6 +89,9 @@ public class Contextor extends RefTable {
     /** Random number generator, for creating unique IDs and sub-IDs. */
     static private SecureRandom theRandom = new SecureRandom();
 
+    /** Mods on completed objects awaiting notification that they're ready. */
+    private List<ObjectCompletionWatcher> myPendingObjectCompletionWatchers;
+
     /**
      * Constructor.
      *
@@ -151,6 +154,7 @@ public class Contextor extends RefTable {
         myPresencerGroup = null;
         myUserNames = new HashMap<String, String>();
         myContextNames = new HashMap<String, String>();
+        myPendingObjectCompletionWatchers = null;
         initializeContextFamilies();
         myPendingGets = new HashMap<String, Set<ArgRunnable>>();
         myStaticObjects = new HashMap<String, Object>();
@@ -202,6 +206,35 @@ public class Contextor extends RefTable {
             String family = ref.substring(0, delim);
             return myContextFamilies.contains(family) ||
                 myContextFamilies.contains("$" + family);
+        }
+    }
+
+    /**
+     * Add to the list of Mods awaiting notification that their objects are
+     * done.
+     *
+     * @param watcher  The watching Mod to be notified.
+     */
+    void addPendingObjectCompletionWatcher(ObjectCompletionWatcher watcher) {
+        if (myPendingObjectCompletionWatchers == null) {
+            myPendingObjectCompletionWatchers = new LinkedList<>();
+        }
+        myPendingObjectCompletionWatchers.add(watcher);
+    }
+
+    /**
+     * Notify any Mods still awaiting notification that their objects are done.
+     *
+     * As a side effect, this will clear the list of who is waiting.
+     */
+    void notifyPendingObjectCompletionWatchers() {
+        if (myPendingObjectCompletionWatchers != null) {
+            List<ObjectCompletionWatcher> targets =
+                myPendingObjectCompletionWatchers;
+            myPendingObjectCompletionWatchers = null;
+            for (ObjectCompletionWatcher target : targets) {
+                target.objectIsComplete();
+            }
         }
     }
 
@@ -728,7 +761,7 @@ public class Contextor extends RefTable {
         private DirectorActor myOpener;
 
         /**
-         * Constructr
+         * Constructor
          *
          * @param contextTemplate  The ref of the context template.
          * @param contextRef  The ref of the context itself.
@@ -775,6 +808,7 @@ public class Contextor extends RefTable {
                                      Contextor.this, myContextTemplate,
                                      myOpener, tr);
                     context.objectIsComplete();
+                    notifyPendingObjectCompletionWatchers();
                 } else {
                     tr.errorm("context '" + myContextTemplate +
                               "' may not be used as a template");

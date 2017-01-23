@@ -106,14 +106,16 @@ class ModSet {
     }
 
     /**
-     * Inform any mods that have expressed an interest that the object they
-     * are mod of is now complete.  If the mod is a ContextShutdownWatcher, 
-     * automatically register interest in the shutdown event with the context.
+     * Arrange to inform any mods that have expressed an interest that the
+     * object they are mod of is now complete.  If the mod is a
+     * ContextShutdownWatcher, automatically register interest in the shutdown
+     * event with the context.
      */
     public void objectIsComplete() {
         for (Mod mod : myMods.values()) {
             if (mod instanceof ObjectCompletionWatcher) {
-                ((ObjectCompletionWatcher) mod).objectIsComplete();
+                mod.object().contextor().addPendingObjectCompletionWatcher(
+                    (ObjectCompletionWatcher) mod);
             }
             if (mod instanceof ContextShutdownWatcher) {
                 mod.context().registerContextShutdownWatcher(
