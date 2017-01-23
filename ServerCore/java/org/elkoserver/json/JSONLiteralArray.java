@@ -196,6 +196,15 @@ public class JSONLiteralArray {
     }
 
     /**
+     * Obtain the encode control governing this literal.
+     *
+     * @return this literal array's encode control.
+     */
+    public EncodeControl control() {
+        return myControl;
+    }
+
+    /**
      * Finish construction of the literal.
      *
      * @throws Error if you try to finish a literal that is already complete.
