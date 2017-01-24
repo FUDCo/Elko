@@ -47,7 +47,7 @@ public class Counter extends Mod implements GeneralMod {
      * <u>recv</u>: <tt> { to:<i>REF</i>, op:"inc" } </tt><br>
      *
      * <u>send</u>: <tt> { to:<i>REF</i>, op:"set",
-     *                     from:<i>REF></i>, count:<i>int</i> } </tt>
+     *                     from:<i>REF</i>, count:<i>int</i> } </tt>
      *
      * @param from  The user requesting the census.
      *

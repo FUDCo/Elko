@@ -36,6 +36,8 @@ public class Msg {
      *
      * @param target  Object the message is being sent to (the object being
      *    informed).
+     * @param op  Operation to be performed.
+     * @param error  Contents of the error message.
      */
     static public JSONLiteral msgError(Referenceable target, String op,
                                        String error)

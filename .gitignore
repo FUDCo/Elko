@@ -1,2 +1,8 @@
 Distrib
 logs
+target
+bin
+lib
+.project
+.classpath
+.settings
