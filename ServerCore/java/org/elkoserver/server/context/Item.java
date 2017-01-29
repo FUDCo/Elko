@@ -163,7 +163,7 @@ public class Item extends BasicObject {
         }
         if (control.toRepository()) {
             if (myContainer != null) {
-                result.addParameter("in", myContainer.ref());
+                result.addParameter("in", myContainer.baseRef());
             }
             if (amDeletable) {
                 result.addParameter("deletable", true);

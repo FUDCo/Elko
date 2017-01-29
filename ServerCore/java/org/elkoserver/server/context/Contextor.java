@@ -685,7 +685,7 @@ public class Contextor extends RefTable {
         }
 
         /**
-         * Runnable invoked by the ODB to accept the delivery of stuff fetch
+         * Runnable invoked by the ODB to accept the delivery of stuff fetched
          * from the database.
          *
          * @param obj The thing that was obtained from the database.  In the
@@ -745,7 +745,7 @@ public class Contextor extends RefTable {
     /**
      * Thunk class to receive a context object fetched from the database.  At
      * the point this is invoked, the context and all of its contents are
-     * loaded by not activated.
+     * loaded but not activated.
      */
     private class GetContextHandler implements ArgRunnable {
         /** The ref of the context template.  This is the ref of the object
@@ -941,12 +941,30 @@ public class Contextor extends RefTable {
      * @param userHandler  Handler to invoke with the resulting user object or
      *    with null if the user object could not be obtained.
      */
-    void loadUser(String userRef, String scope, ArgRunnable userHandler) {
+    void loadUser(final String userRef, String scope,
+                  ArgRunnable userHandler)
+    {
         if (userRef.startsWith("user-") || userRef.startsWith("u-")) {
             if (scope != null) {
                 userHandler = new ScopedModAttacher(scope, userHandler);
             }
-            myODB.getObject(userRef, null, userHandler);
+
+            ArgRunnable getHandler = new ArgRunnable() {
+                public void run(Object obj) {
+                    resolvePendingGet(userRef, obj);
+                }
+            };
+            final ContentsHandler contentsHandler =
+                new ContentsHandler(null, getHandler);
+            ArgRunnable userReceiver = new ArgRunnable() {
+                public void run(Object obj) {
+                    contentsHandler.receiveContainer((BasicObject) obj);
+                }
+            };
+            if (addPendingGet(userRef, userHandler)) {
+                myODB.getObject(userRef, null, userReceiver);
+                loadContentsOfContainer(userRef, contentsHandler);
+            }
         } else {
             userHandler.run(null);
         }
