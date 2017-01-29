@@ -231,7 +231,7 @@ public class LogEater {
             Mongo mongo;
             try {
                 mongo = new Mongo(host, port);
-            } catch (MongoException e) {
+            } catch (UnknownHostException e) {
                 e("mongodb server " + dbHost + ": unknown host");
                 System.exit(1);
                 return; // to make the compiler shut up.
