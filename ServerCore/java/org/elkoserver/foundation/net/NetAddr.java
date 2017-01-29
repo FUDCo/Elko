@@ -54,7 +54,7 @@ public class NetAddr {
     /**
      * Construct a new NetAddr given an IP address and a port number.
      *
-     * @param inetAddress  An IP address, where null => all local IP addresses.
+     * @param inetAddress  An IP address, where null =&gt; all local IP addresses.
      * @param portNumber  A port at that IP address.
      */
     public NetAddr(InetAddress inetAddress, int portNumber) {

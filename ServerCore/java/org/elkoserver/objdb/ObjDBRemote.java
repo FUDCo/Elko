@@ -95,7 +95,7 @@ public class ObjDBRemote extends ObjDBBase {
      * read from the repository at startup time.
      *
      * @param serviceFinder  Access to broker, to locate repository server.
-     * @param networkManger  Network manager, for making outbound connections.
+     * @param networkManager  Network manager, for making outbound connections.
      * @param localName  Name of this server.
      * @param props  Properties that the hosting server was configured with
      * @param propRoot  Prefix string for generating relevant configuration

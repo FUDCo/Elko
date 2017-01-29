@@ -619,7 +619,7 @@ public class BankClient extends AdminObject implements ArgRunnable {
      *
      * @param key  Authorizing key.
      * @param memo  Transaction annotation.
-     * @param account  Ref of the account being queried.
+     * @param accounts  Refs of the accounts being queried.
      * @param encs  Flag that is true if the results should also include
      *    information about extant encumbrances on the account.
      * @param resultHandler  Callback to be invoked on the result.
@@ -759,7 +759,7 @@ public class BankClient extends AdminObject implements ArgRunnable {
      *
      * @param key  Authorizing key.
      * @param memo  Transaction annotation
-     * @param src  Ref of encumbrance that reserves the funds to be destroyed.
+     * @param enc  Ref of encumbrance that reserves the funds to be destroyed.
      * @param resultHandler  Callback to be invoked on the result.
      */
     public void unmintEncumbrance(String key, String memo, String enc,

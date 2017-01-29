@@ -27,6 +27,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
 /**
@@ -230,7 +231,7 @@ public class LogEater {
             Mongo mongo;
             try {
                 mongo = new Mongo(host, port);
-            } catch (UnknownHostException e) {
+            } catch (MongoException e) {
                 e("mongodb server " + dbHost + ": unknown host");
                 System.exit(1);
                 return; // to make the compiler shut up.
