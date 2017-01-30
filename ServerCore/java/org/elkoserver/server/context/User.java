@@ -50,6 +50,9 @@ public class User extends BasicObject implements Deliverer {
     /** Flag that user is an anonymous, ephemeral user. */
     private boolean amAnonymous;
 
+    /** Flag that user contents are opaque to other users. */
+    private boolean amPrivateContents;
+
     /** Trace object for diagnostics. */
     private Trace tr;
 
@@ -89,6 +92,7 @@ public class User extends BasicObject implements Deliverer {
         myContext = null;
         amExited = false;
         amAnonymous = false;
+        amPrivateContents = false;
         amEntered = false;
         hasArrived = false;
         mySess = null;
@@ -433,9 +437,10 @@ public class User extends BasicObject implements Deliverer {
                                     boolean you)
     {
         to.send(Msg.msgMake(maker, this, null, you, null));
-        if (to == this) {
+        if (!amPrivateContents || to == this) {
             Contents.sendContentsDescription(to, this, myContents);
         }
+        to.send(Msg.msgReady(this));
     }
 
     /**
