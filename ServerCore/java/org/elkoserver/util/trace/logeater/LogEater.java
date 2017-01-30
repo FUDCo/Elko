@@ -229,13 +229,13 @@ public class LogEater {
                 host = dbHost.substring(0, colon);
             }
             Mongo mongo;
-            try {
+            //try {
                 mongo = new Mongo(host, port);
-            } catch (UnknownHostException e) {
-                e("mongodb server " + dbHost + ": unknown host");
-                System.exit(1);
-                return; // to make the compiler shut up.
-            }
+            //} catch (UnknownHostException e) {
+            //    e("mongodb server " + dbHost + ": unknown host");
+            //    System.exit(1);
+            //    return; // to make the compiler shut up.
+            //}
             DB db = mongo.getDB(dbName);
             theCollection = db.getCollection(dbCollName);
         }

@@ -97,11 +97,11 @@ public class MongoObjectStore implements ObjectStore {
             port = Integer.parseInt(addressStr.substring(colon + 1)) ;
             host = addressStr.substring(0, colon);
         }
-        try {
+        //try {
             myMongo = new Mongo(host, port);
-        } catch (UnknownHostException e) {
-            tr.fatalError("mongodb server " + addressStr + ": unknown host");
-        }
+        //} catch (UnknownHostException e) {
+        //    tr.fatalError("mongodb server " + addressStr + ": unknown host");
+        //}
         String dbName = props.getProperty(propRoot + ".dbname", "elko");
         myDB = myMongo.getDB(dbName);
 
