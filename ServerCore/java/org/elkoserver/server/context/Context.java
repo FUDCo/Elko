@@ -987,15 +987,6 @@ public class Context extends BasicObject implements Deliverer {
                 result.addParameter("usermods", userMods);
             }
         }
-        /*
-        if (control.toRepository() && myContents != null &&
-                !amContentAgnostic) {
-            JSONLiteralArray contents = myContents.encode(control);
-            if (contents.size() > 0) {
-                result.addParameterRef("contents", contents);
-            }
-        }
-        */
         result.finish();
         return result;
     }

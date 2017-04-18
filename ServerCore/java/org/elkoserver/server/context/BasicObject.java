@@ -187,7 +187,17 @@ abstract public class BasicObject
         if (myModSet != null) {
             myModSet.attachTo(this);
         }
-        contextor.setContents(this, subID, myPassiveContents);
+        activatePassiveContents(subID);
+    }
+
+    /**
+     * Move contents items from the passive contents array to the actual live
+     * contents array and make them live too.
+     *
+     * @param subID  Clone sub identity, or the empty string for non-clones.
+     */
+    void activatePassiveContents(String subID) {
+        myContextor.setContents(this, subID, myPassiveContents);
         myPassiveContents = null;
     }
 
@@ -411,6 +421,18 @@ abstract public class BasicObject
                 handler.run(null);
             }
         }
+    }
+
+    /**
+     * Remove this object's contents (and their contents, recursively) from
+     * the working set of objects in memory.
+     */
+    void dropContents() {
+        for (Item item : contents()) {
+            item.dropContents();
+            myContextor.remove(item);
+        }
+        myContents = null;
     }
 
     /**

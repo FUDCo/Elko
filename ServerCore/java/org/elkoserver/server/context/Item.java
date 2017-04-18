@@ -9,6 +9,7 @@ import org.elkoserver.json.EncodeControl;
 import org.elkoserver.json.JSONLiteral;
 import org.elkoserver.json.JSONLiteralArray;
 import org.elkoserver.json.Referenceable;
+import org.elkoserver.util.ArgRunnable;
 import org.elkoserver.util.trace.Trace;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,9 @@ public class Item extends BasicObject {
 
     /** Flag that users may move this item around. */
     private boolean amPortable;
+
+    /** Flag this container item is closed. */
+    private boolean amClosed;
 
     /* Fields below here only apply to active items. */
 
@@ -41,11 +45,15 @@ public class Item extends BasicObject {
      * @param isContainer  Flag indicating whether the item may be used as a
      *    container.
      * @param isDeletable  Flag indicating whether users my delete this item.
+     * @param isClosed  Flag indicating whether this container is closed.
      * @param pos  Optional position of the item within its container.
      */
-    Item(String name, boolean isContainer, boolean isDeletable, Position pos) {
+    Item(String name, boolean isContainer, boolean isDeletable,
+         boolean isClosed, Position pos)
+    {
         super(name, null, isContainer, null, pos);
         amDeletable = isDeletable;
+        amClosed = isClosed;
         myContainerWatcher = null;
     }
 
@@ -63,18 +71,20 @@ public class Item extends BasicObject {
      *    as a container.
      * @param isDeletable  Flag indicating whether users may delete this item.
      * @param isPortable  Flag indicating whether users may move this item.
+     * @param isClosed  Flag indicating whether this container is closed.
      * @param pos  Optional position of the item within its container.
      */
     @JSONMethod({ "name", "ref", "mods", "contents", "in", "cont", "deletable",
-                  "portable", "?pos" })
+                  "portable", "closed", "?pos" })
     Item(String name, OptString ref, Mod mods[], Item contents[], OptString in,
          OptBoolean isPossibleContainer, OptBoolean isDeletable,
-         OptBoolean isPortable, Position pos)
+         OptBoolean isPortable, OptBoolean isClosed, Position pos)
     {
         super(name, mods, isPossibleContainer.value(true), contents, pos);
         myRef = ref.value(null);
         amDeletable = isDeletable.value(false);
         amPortable = isPortable.value(false);
+        amClosed = isClosed.value(false);
         myContainerWatcher = null;
     }
 
@@ -99,6 +109,24 @@ public class Item extends BasicObject {
                 context().trace().errorm("ContainerWatcher mod " + mod +
                     " added to " + this + ", which already has one");
             }
+        }
+    }
+
+    /**
+     * If this item is an open container, close it.  This results in the
+     * broadcast of "delete" messages to the context for all the item's
+     * contents (assuming it has any).
+     *
+     * If the item is not a container or is already closed, this is a no-op.
+     */
+    public void closeContainer() {
+        if (isContainer() && !amClosed) {
+            amClosed = true;
+            markAsChanged();
+            for (Item item : contents()) {
+                context().send(Msg.msgDelete(item));
+            }
+            dropContents();
         }
     }
 
@@ -157,6 +185,10 @@ public class Item extends BasicObject {
         }
         if (!isContainer()) {
             result.addParameter("cont", false);
+        } else {
+            if (amClosed) {
+                result.addParameter("closed", true);
+            }
         }
         if (amPortable) {
             result.addParameter("portable", true);
@@ -168,14 +200,6 @@ public class Item extends BasicObject {
             if (amDeletable) {
                 result.addParameter("deletable", true);
             }
-            /*
-            if (myContents != null) {
-                JSONLiteralArray contentsArray = myContents.encode(control);
-                if (contentsArray.size() > 0) {
-                    result.addParameterRef("contents", contentsArray);
-                }
-            }
-            */
         }
     }
 
@@ -213,6 +237,15 @@ public class Item extends BasicObject {
     }
 
     /**
+     * Test if this is a closed container.
+     *
+     * @return  true if this item is a container that is closed.
+     */
+    public boolean isClosed() {
+        return amClosed;
+    }
+
+    /**
      * Test if unprivileged users inside the context can delete this item (by
      * sending a 'delete' message to the server).
      *
@@ -230,6 +263,27 @@ public class Item extends BasicObject {
      */
     public boolean isPortable() {
         return amPortable;
+    }
+
+    /**
+     * If this item is a closed container, open it.  This results in the
+     * broadcast of "make" messages to the context announcing the item's
+     * contents (if it has any).
+     *
+     * If the item is not a container or is already open, this is a no-op.
+     */
+    public void openContainer() {
+        if (isContainer() && amClosed) {
+            amClosed = false;
+            markAsChanged();
+            myContextor.loadItemContents(this, new ArgRunnable() {
+                public void run(Object obj) {
+                    activatePassiveContents("");
+                    Contents.sendContentsDescription(context(), Item.this,
+                                                     myContents);
+                }
+            });
+        }
     }
 
     /**

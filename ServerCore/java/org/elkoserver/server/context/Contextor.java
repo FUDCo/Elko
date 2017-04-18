@@ -327,7 +327,7 @@ public class Contextor extends RefTable {
     /**
      * Return a newly minted Item (i.e., one created at runtime rather than
      * loaded from the object database).  The new item will have no contents,
-     * no mods, and no position.
+     * no mods, and no position.  If it is a container, it will be open.
      *
      * @param name  The name for the new item, or null if the name doesn't
      *    matter.
@@ -340,7 +340,8 @@ public class Contextor extends RefTable {
     Item createItem(String name, BasicObject container,
                     boolean isPossibleContainer, boolean isDeletable)
     {
-        Item item = new Item(name, isPossibleContainer, isDeletable, null);
+        Item item =
+            new Item(name, isPossibleContainer, isDeletable, false, null);
         initializeItem(item, container);
         return item;
     }
@@ -364,7 +365,7 @@ public class Contextor extends RefTable {
                        boolean isPossibleContainer, boolean isDeletable,
                        double lat, double lon)
     {
-        Item item = new Item(name, isPossibleContainer, isDeletable,
+        Item item = new Item(name, isPossibleContainer, isDeletable, false,
                              new GeoPosition(lat, lon));
         initializeItem(item, container);
         return item;
@@ -581,17 +582,17 @@ public class Contextor extends RefTable {
 
         /** The container object this handler is handling the loading of
             contents for.  Initially, this is null; it acquires a value when
-            the external entity tha actually fetches the container object calls
-            the receiveContainer() method. */
+            the external entity that actually fetches the container object
+            calls the receiveContainer() method. */
         private BasicObject myContainer;
 
         /** Flag indicating that 'myContainer' has been set. */
         private boolean haveContainer;
 
         /** Array of contents objects whose contents this handler is overseeing
-           the recursive loading of.  Initially, this is null; it acquires a
-           value when the external entity that actually fetches the contents
-           objects calls the receiveContents() method. */
+            the recursive loading of.  Initially, this is null; it acquires a
+            value when the external entity that actually fetches the contents
+            objects calls the receiveContents() method. */
         private Item[] myContents;
 
         /** Flag indicating that 'myContents' has been set. */
@@ -703,11 +704,16 @@ public class Contextor extends RefTable {
                     expectMore(rawContents.length);
                     contents = new Item[rawContents.length];
                     for (int i = 0; i < rawContents.length; ++i) {
-                        contents[i] = (Item) rawContents[i];
-                        ContentsHandler subHandler =
-                            new ContentsHandler(this, myTopHandler);
-                        subHandler.receiveContainer(contents[i]);
-                        loadContentsOfContainer(contents[i].ref(), subHandler);
+                        Item item = (Item) rawContents[i];
+                        contents[i] = item;
+                        if (item.isContainer() && !item.isClosed()) {
+                            ContentsHandler subHandler =
+                                new ContentsHandler(this, myTopHandler);
+                            subHandler.receiveContainer(item);
+                            loadContentsOfContainer(item.ref(), subHandler);
+                        } else {
+                            somethingArrived(1);
+                        }
                     }
                     receiveContents(contents);
                 }
@@ -723,7 +729,9 @@ public class Contextor extends RefTable {
      * @param containerRef  Ref of the container object.
      * @param handler  Runnable to be invoked with the retrieved objects.
      */
-    void loadContentsOfContainer(String containerRef, ArgRunnable handler) {
+    private void loadContentsOfContainer(String containerRef,
+                                         ArgRunnable handler)
+    {
         queryObjects(contentsQuery(containerRef), null, 0, handler);
     }
 
@@ -895,6 +903,18 @@ public class Contextor extends RefTable {
      */
     int limit() {
         return myLimit;
+    }
+
+    /**
+     * Load the contents of a previously closed container.
+     *
+     * @param item  The item whose contents are to be loaded.
+     * @param handler  Handler to be notified once the contents are laoded.
+     */
+    void loadItemContents(Item item, ArgRunnable handler) {
+        ContentsHandler contentsHandler = new ContentsHandler(null, handler);
+        contentsHandler.receiveContainer(item);
+        loadContentsOfContainer(item.ref(), contentsHandler);
     }
 
     /**

@@ -215,14 +215,6 @@ public class User extends BasicObject implements Deliverer {
                 result.addParameter("mods", mods);
             }
         }
-        /*
-        if (control.toRepository() && myContents != null) {
-            JSONLiteralArray contents = myContents.encode(control);
-            if (contents.size() > 0) {
-                result.addParameterRef("contents", contents);
-            }
-        }
-        */
         result.finish();
         return result;
     }
