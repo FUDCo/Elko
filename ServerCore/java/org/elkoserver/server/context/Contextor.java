@@ -239,6 +239,22 @@ public class Contextor extends RefTable {
     }
 
     /**
+     * Activate an item that is contained by another object as part of its
+     * being loaded.
+     *
+     * @param container  The container into which the item is placed.
+     * @param subID  Sub-ID string for cloned objects.  This should be an empty
+     *    string if clones are not being generated.
+     * @param Item  Inactive item that is being activated.
+     */
+    void activateContentsItem(BasicObject container, String subID, Item item) {
+        String ref = item.ref() + subID;
+        item.activate(ref, subID, container.isEphemeral(), this);
+        item.setContainerPrim(container);
+        item.objectIsComplete();
+    }
+
+    /**
      * Take note that somebody is waiting for an object from the object
      * database.
      *
@@ -1474,13 +1490,6 @@ public class Contextor extends RefTable {
                 }
             }
         }
-    }
-
-    void activateContentsItem(BasicObject container, String subID, Item item) {
-        String ref = item.ref() + subID;
-        item.activate(ref, subID, container.isEphemeral(), this);
-        item.setContainerPrim(container);
-        item.objectIsComplete();
     }
 
     /**
