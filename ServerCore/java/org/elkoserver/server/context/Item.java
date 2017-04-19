@@ -279,6 +279,7 @@ public class Item extends BasicObject {
             myContextor.loadItemContents(this, new ArgRunnable() {
                 public void run(Object obj) {
                     activatePassiveContents("");
+                    myContextor.notifyPendingObjectCompletionWatchers();
                     Contents.sendContentsDescription(context(), Item.this,
                                                      myContents);
                 }
