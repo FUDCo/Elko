@@ -748,7 +748,8 @@ public class Contextor extends RefTable {
     private void loadContentsOfContainer(String containerRef,
                                          ArgRunnable handler)
     {
-        queryObjects(contentsQuery(containerRef), null, 0, handler);
+        queryObjects(contentsQuery(extractBaseRef(containerRef)), null, 0,
+                     handler);
     }
 
     /**
