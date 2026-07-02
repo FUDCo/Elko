@@ -123,6 +123,17 @@ public class Item extends BasicObject {
         if (isContainer() && !amClosed) {
             amClosed = true;
             markAsChanged();
+            /* Persist the closed flag now rather than leaving it for a
+               shutdown-time flush.  The persisted 'closed' flag gates whether
+               this container's contents are loaded (and thus described to
+               arriving users) at context activation, so a stale value strands
+               the contents invisible after a restart.  Deferring the write
+               also risks losing it entirely on an unclean shutdown, and any
+               application-level checkpoint taken before the flush would
+               persist the old value.  Checkpointing here additionally flushes
+               any still-dirty contents before they are dropped from memory
+               below. */
+            checkpoint();
             for (Item item : contents()) {
                 context().send(Msg.msgDelete(item));
             }
@@ -276,6 +287,14 @@ public class Item extends BasicObject {
         if (isContainer() && amClosed) {
             amClosed = false;
             markAsChanged();
+            /* Persist the open flag now — see closeContainer() for why the
+               'closed' flag must never sit dirty in memory: it controls
+               whether contents are loaded at context activation, so an
+               application checkpoint or unclean shutdown in the window would
+               persist 'closed' for a container everyone sees as open, hiding
+               its contents from every user who arrives after the next
+               activation. */
+            checkpoint();
             myContextor.loadItemContents(this, new ArgRunnable() {
                 public void run(Object obj) {
                     activatePassiveContents("");
