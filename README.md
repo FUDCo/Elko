@@ -95,8 +95,14 @@ applications relied on for so long).
 More detail on building will be presented in an accompanying `BUILD.md` file
 once I get done writing it.
 
-All the Java code works on any standard, reasonably current JVM, as it does not
-make use of any language features newer than generics. The various shell
+The current build requires Java 8 or newer. MongoDB persistence uses the
+`mongodb-driver-legacy` 5.13.0 artifact and its matching `mongodb-driver-sync`,
+`mongodb-driver-core`, and `bson` dependencies. This retains Elko's existing
+storage API while supporting MongoDB 8. To run the standalone storage regression
+against a running loopback MongoDB, use
+`bash Build/test-mongo.sh /path/to/dependency-jars 27017`; the directory must also
+contain Commons Codec 1.9. The test creates and drops its own uniquely named
+database and does not migrate existing data. The various shell
 scripts in the `Run` tree do assume a Unix shell environment, but Cygwin will
 suffice and they are not deeply essential anyway.
 

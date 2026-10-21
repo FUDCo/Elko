@@ -23,7 +23,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import org.bson.types.ObjectId;
@@ -43,7 +43,7 @@ public class MongoObjectStore implements ObjectStore {
     private Trace tr;
 
     /** The MongoDB instance in which the objects are stored. */
-    private Mongo myMongo;
+    private MongoClient myMongo;
 
     /** The Mongo database we are using */
     private DB myDB;
@@ -98,7 +98,7 @@ public class MongoObjectStore implements ObjectStore {
             host = addressStr.substring(0, colon);
         }
         //try {
-            myMongo = new Mongo(host, port);
+            myMongo = new MongoClient(host, port);
         //} catch (UnknownHostException e) {
         //    tr.fatalError("mongodb server " + addressStr + ": unknown host");
         //}
@@ -480,7 +480,7 @@ public class MongoObjectStore implements ObjectStore {
             DBObject query = jsonObjectToDBObject(template);
             DBCursor cursor;
             if (maxResults > 0) {
-                cursor = collection.find(query, null, 0, -maxResults);
+                cursor = collection.find(query).limit(maxResults);
             } else {
                 cursor = collection.find(query);
             }
@@ -559,6 +559,8 @@ public class MongoObjectStore implements ObjectStore {
      * This method gets invoked at most once, at server shutdown time.
      */
     public void shutdown() {
-        /* nothing to do in this implementation */
+        if (myMongo != null) {
+            myMongo.close();
+        }
     }
 }
