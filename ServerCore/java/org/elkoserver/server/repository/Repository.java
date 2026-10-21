@@ -42,7 +42,6 @@ class Repository {
         tr = appTrace;
 
         myRefTable = new RefTable(StaticTypeResolver.theStaticTypeResolver);
-        myRefTable.addRef(new RepHandler(this));
         myRefTable.addRef(new AdminHandler(this));
 
         amShuttingDown = false;
@@ -73,6 +72,7 @@ class Repository {
             tr.fatalError("unable to instantiate object store object: " + e);
         }
         myObjectStore.initialize(myServer.props(), propRoot, tr);
+        myRefTable.addRef(new RepHandler(this));
     }
 
     /**
