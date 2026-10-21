@@ -26,7 +26,11 @@ public class JSONArray extends ArrayList<Object> {
     /* package */ void encodeLiteral(StringBuffer buf, EncodeControl control) {
         JSONLiteralArray literal = new JSONLiteralArray(buf, control);
         for (Object element : this) {
-            literal.addElement(element);
+            if (element == null) {
+                literal.addNullElement();
+            } else {
+                literal.addElement(element);
+            }
         }
         literal.finish();
     }
@@ -40,7 +44,11 @@ public class JSONArray extends ArrayList<Object> {
     public JSONLiteralArray literal(EncodeControl control) {
         JSONLiteralArray literal = new JSONLiteralArray(control);
         for (Object element : this) {
-            literal.addElement(element);
+            if (element == null) {
+                literal.addNullElement();
+            } else {
+                literal.addElement(element);
+            }
         }
         literal.finish();
         return literal;

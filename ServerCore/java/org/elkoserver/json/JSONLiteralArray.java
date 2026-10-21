@@ -107,6 +107,15 @@ public class JSONLiteralArray {
         }
     }
 
+    /** Preserve an explicit null in a parsed JSON array. Application-oriented
+     * addElement methods retain their existing omission behavior.
+     */
+    /* package */ void addNullElement() {
+        beginElement();
+        myStringBuffer.append("null");
+        mySize += 1;
+    }
+
     /**
      * Add an object element to an incomplete array.
      *
