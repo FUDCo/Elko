@@ -114,18 +114,18 @@ public class MongoObjectStoreTest {
                 require(removed[0][0].failure() == null, "Remove failed");
                 require("not found".equals(get(store).failure()), "Remove retained object");
                 String metadata = "{\"ref\":\"probe\",\"version\":1," +
-                    "\"_etnaOwnership\":{\"owner\":null,\"token\":\"test\"},\"_private\":42}";
+                    "\"_applicationMetadata\":{\"owner\":null,\"token\":\"test\"},\"_private\":42}";
                 require(put(store, "probe", metadata, true).failure() == null,
                         "Metadata fixture failed");
-                require(JSONObject.parse(get(store).obj()).getProperty("_etnaOwnership") == null,
+                require(JSONObject.parse(get(store).obj()).getProperty("_applicationMetadata") == null,
                         "Default underscore filtering changed");
-                props.setProperty("test.odb.mongo.preservefields", "_etnaOwnership");
+                props.setProperty("test.odb.mongo.preservefields", "_applicationMetadata");
                 props.setProperty("test.odb.mongo.legacyversionzero", "true");
                 compatible.initialize(props, "test", Trace.trace("mongo-compatible-test"));
                 JSONObject preserved = JSONObject.parse(get(compatible).obj());
-                require("test".equals(preserved.getObject("_etnaOwnership").getString("token")),
+                require("test".equals(preserved.getObject("_applicationMetadata").getString("token")),
                         "Selected metadata field was lost");
-                require(preserved.getObject("_etnaOwnership").sendableString().contains("\"owner\":null"),
+                require(preserved.getObject("_applicationMetadata").sendableString().contains("\"owner\":null"),
                         "Explicit null metadata value was lost");
                 require(preserved.getProperty("_private") == null,
                         "Unselected underscore field was exposed");

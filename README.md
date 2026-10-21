@@ -109,7 +109,7 @@ suffice and they are not deeply essential anyway.
 For mixed deployments that need additional stored metadata, the Mongo store
 supports two opt-in settings (shown with the Repository's property prefix):
 
-* `conf.rep.odb.mongo.preservefields=_etnaOwnership` retains the explicitly
+* `conf.rep.odb.mongo.preservefields=_applicationMetadata` retains the explicitly
   listed underscore-prefixed fields during reads and queries. Use a comma-separated
   list for multiple fields. Other underscore fields remain filtered; `_id` and
   the generated `_qpos_` retain their existing special treatment and cannot be
@@ -120,8 +120,8 @@ supports two opt-in settings (shown with the Repository's property prefix):
   The default retains the original exact-version behavior.
 
 Provision a unique `ref` index for every collection used with create-only writes.
-These options do not add a version guard to physical removal. Etna ownership
-deletion uses conditional replacement with a tombstone instead.
+These options do not add a version guard to physical removal. Applications that
+require conditional deletion can use a versioned replacement with a tombstone.
 
 #### Binaries
 
