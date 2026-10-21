@@ -106,6 +106,23 @@ database and does not migrate existing data. The various shell
 scripts in the `Run` tree do assume a Unix shell environment, but Cygwin will
 suffice and they are not deeply essential anyway.
 
+For mixed deployments that need additional stored metadata, the Mongo store
+supports two opt-in settings (shown with the Repository's property prefix):
+
+* `conf.rep.odb.mongo.preservefields=_etnaOwnership` retains the explicitly
+  listed underscore-prefixed fields during reads and queries. Use a comma-separated
+  list for multiple fields. Other underscore fields remain filtered; `_id` and
+  the generated `_qpos_` retain their existing special treatment and cannot be
+  listed. The default preserves no additional fields.
+* `conf.rep.odb.mongo.legacyversionzero=true` permits an atomic update expecting
+  version zero to match either explicit zero or an absent version. It does not
+  match a null version. The caller still supplies the replacement's next version.
+  The default retains the original exact-version behavior.
+
+Provision a unique `ref` index for every collection used with create-only writes.
+These options do not add a version guard to physical removal. Etna ownership
+deletion uses conditional replacement with a tombstone instead.
+
 #### Binaries
 
 If you don't feel like building Elko yourself, a pre-built .jar file is

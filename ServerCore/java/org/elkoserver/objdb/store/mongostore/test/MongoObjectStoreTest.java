@@ -54,6 +54,7 @@ public class MongoObjectStoreTest {
         int port = Integer.parseInt(args[0]);
         String dbName = "elko_test_" + UUID.randomUUID().toString().replace("-", "");
         MongoObjectStore store = new MongoObjectStore();
+        MongoObjectStore compatible = new MongoObjectStore();
         try (MongoClient client = new MongoClient("127.0.0.1", port)) {
             DB db = client.getDB(dbName);
             try {
@@ -112,10 +113,39 @@ public class MongoObjectStoreTest {
                 }, rows -> removed[0] = rows);
                 require(removed[0][0].failure() == null, "Remove failed");
                 require("not found".equals(get(store).failure()), "Remove retained object");
+                String metadata = "{\"ref\":\"probe\",\"version\":1," +
+                    "\"_etnaOwnership\":{\"owner\":null,\"token\":\"test\"},\"_private\":42}";
+                require(put(store, "probe", metadata, true).failure() == null,
+                        "Metadata fixture failed");
+                require(JSONObject.parse(get(store).obj()).getProperty("_etnaOwnership") == null,
+                        "Default underscore filtering changed");
+                props.setProperty("test.odb.mongo.preservefields", "_etnaOwnership");
+                props.setProperty("test.odb.mongo.legacyversionzero", "true");
+                compatible.initialize(props, "test", Trace.trace("mongo-compatible-test"));
+                JSONObject preserved = JSONObject.parse(get(compatible).obj());
+                require("test".equals(preserved.getObject("_etnaOwnership").getString("token")),
+                        "Selected metadata field was lost");
+                require(preserved.getObject("_etnaOwnership").sendableString().contains("\"owner\":null"),
+                        "Explicit null metadata value was lost");
+                require(preserved.getProperty("_private") == null,
+                        "Unselected underscore field was exposed");
+                collection.update(new BasicDBObject("ref", "probe"),
+                                  new BasicDBObject("ref", "probe"));
+                require(update(store, 0, first).isAtomicFailure(),
+                        "Default missing-version behavior changed");
+                require(update(compatible, 0, first).failure() == null,
+                        "Opt-in legacy version zero failed");
+                require(update(compatible, 0, first).isAtomicFailure(),
+                        "Stale zero-version write was accepted");
+                collection.update(new BasicDBObject("ref", "probe"),
+                    new BasicDBObject("ref", "probe").append("version", null));
+                require(update(compatible, 0, first).isAtomicFailure(),
+                        "Malformed null version was treated as absent");
                 System.out.println("PASS: Mongo create/read/replace, duplicate and stale " +
-                                   "write rejection, query limits across batches, remove");
+                                   "write rejection, query limits, remove, opt-in metadata and legacy versions");
             } finally {
                 store.shutdown();
+                compatible.shutdown();
                 db.dropDatabase();
             }
         }
