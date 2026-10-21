@@ -26,7 +26,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
@@ -228,9 +228,9 @@ public class LogEater {
                 port = Integer.parseInt(dbHost.substring(colon + 1)) ;
                 host = dbHost.substring(0, colon);
             }
-            Mongo mongo;
+            MongoClient mongo;
             //try {
-                mongo = new Mongo(host, port);
+                mongo = new MongoClient(host, port);
             //} catch (UnknownHostException e) {
             //    e("mongodb server " + dbHost + ": unknown host");
             //    System.exit(1);
