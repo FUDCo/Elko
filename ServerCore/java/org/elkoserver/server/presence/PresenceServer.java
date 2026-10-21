@@ -300,12 +300,38 @@ class PresenceServer {
         for (SocialGraph graph : mySocialGraphs.values()) {
             graph.domain().removeClient(actor);
         }
-        Iterator<PresenceActor> iter = myVisibles.values().iterator();
+        Set<String> departedContexts = new HashSet<String>();
+        Iterator<Map.Entry<String, PresenceActor>> iter =
+            myVisibles.entrySet().iterator();
         while (iter.hasNext()) {
-            PresenceActor client = iter.next();
-            if (client == actor) {
+            Map.Entry<String, PresenceActor> entry = iter.next();
+            if (entry.getValue() == actor) {
+                departedContexts.add(entry.getKey());
                 iter.remove();
             }
+        }
+        // Preserve contexts reassigned to a new connection. For the contexts
+        // this actor still owned, remove all presences and notify surviving
+        // subscribers just as for explicit user departures.
+        Iterator<ActiveUser> users = myUsers.values().iterator();
+        while (users.hasNext()) {
+            ActiveUser user = users.next();
+            String[] presences = user.presences();
+            boolean removed = false;
+            if (presences != null) {
+                for (String context : presences) {
+                    if (departedContexts.contains(context)) {
+                        user.removePresence(context, this);
+                        removed = true;
+                    }
+                }
+            }
+            if (removed && user.presenceCount() == 0) {
+                users.remove();
+            }
+        }
+        for (String context : departedContexts) {
+            myContextMetadata.remove(context);
         }
     }
 
