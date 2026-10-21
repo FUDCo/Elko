@@ -313,7 +313,9 @@ class ActiveUser {
             for (int i = 0; i < myPresences.length; ++i) {
                 if (context.equals(myPresences[i])) {
                     myPresences[i] = null;
-                    notifyFriendsAboutMe(false, context, master);
+                    if (graphsAreReady()) {
+                        notifyFriendsAboutMe(false, context, master);
+                    }
                     return true;
                 }
             }
