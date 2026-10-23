@@ -33,6 +33,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * An {@link ObjectStore} implementation that stores objects in a MongoDB NoSQL
@@ -44,6 +46,10 @@ public class MongoObjectStore implements ObjectStore {
 
     /** The MongoDB instance in which the objects are stored. */
     private MongoClient myMongo;
+    /** Explicitly retained underscore-prefixed application fields. */
+    private Set<String> myPreservedFields = new HashSet<String>();
+    /** Treat missing versions as zero for conditional replacement, when enabled. */
+    private boolean myLegacyVersionZero;
 
     /** The Mongo database we are using */
     private DB myDB;
@@ -73,6 +79,13 @@ public class MongoObjectStore implements ObjectStore {
      * allows the collection containing the object repository to be specified.
      * If omitted, this defaults to <tt>"odb"</tt>.
      *
+     * <p>Optional <tt>preservefields</tt> is a comma-separated list of
+     * underscore-prefixed fields to retain during reads. The default is empty;
+     * reserved fields <tt>_id</tt> and <tt>_qpos_</tt> cannot be listed.
+     * Optional <tt>legacyversionzero</tt> (default false) lets a conditional
+     * update expecting version zero match a missing version as well as zero.
+     * Both options use the same <tt><i>propRoot</i>.odb.mongo</tt> prefix.
+     *
      * @param props  Properties describing configuration information.
      * @param propRoot  Prefix string for selecting relevant properties.
      * @param appTrace  Trace object for use in logging.
@@ -82,6 +95,19 @@ public class MongoObjectStore implements ObjectStore {
     {
         tr = appTrace;
         propRoot = propRoot + ".odb.mongo";
+        myLegacyVersionZero = props.boolProperty(propRoot + ".legacyversionzero", false);
+        String fields = props.getProperty(propRoot + ".preservefields", "");
+        myPreservedFields.clear();
+        if (!fields.trim().isEmpty()) {
+            for (String field : fields.split(",", -1)) {
+                field = field.trim();
+                if (!field.startsWith("_") || field.length() > 128 ||
+                    field.equals("_id") || field.equals("_qpos_")) {
+                    throw new IllegalArgumentException("Invalid preserved Mongo field: " + field);
+                }
+                myPreservedFields.add(field);
+            }
+        }
 
         String addressStr = props.getProperty(propRoot + ".hostport");
         if (addressStr == null) {
@@ -171,7 +197,7 @@ public class MongoObjectStore implements ObjectStore {
     private JSONObject dbObjectToJSONObject(DBObject dbObj) {
         JSONObject result = new JSONObject();
         for (String key : dbObj.keySet()) {
-            if (!key.startsWith("_")) {
+            if (!key.startsWith("_") || myPreservedFields.contains(key)) {
                 Object value = dbObj.get(key);
                 if (value instanceof BasicDBList) {
                     value = dbListToJSONArray((BasicDBList) value);
@@ -362,7 +388,15 @@ public class MongoObjectStore implements ObjectStore {
                 DBObject objectToWrite = jsonLiteralToDBObject(obj, ref);
                 DBObject query = new BasicDBObject();
                 query.put("ref", ref);
-                query.put("version", version);
+                if (myLegacyVersionZero && version == 0) {
+                    BasicDBList alternatives = new BasicDBList();
+                    alternatives.add(new BasicDBObject("version", 0));
+                    alternatives.add(new BasicDBObject("version",
+                        new BasicDBObject("$exists", false)));
+                    query.put("$or", alternatives);
+                } else {
+                    query.put("version", version);
+                }
                 WriteResult result =
                     collection.update(query, objectToWrite, false, false);
                 if (result.getN() != 1) {
