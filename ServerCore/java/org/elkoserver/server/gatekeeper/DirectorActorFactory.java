@@ -36,6 +36,8 @@ class DirectorActorFactory implements MessageHandlerFactory {
     
     /** Object currently attempting to establish a director connection. */
     private ConnectionRetrier myConnectionRetrier;
+    /** Invalidates in-flight attempts when the configured connection changes. */
+    private int myConnectionGeneration;
 
     /**
      * Constructor.
@@ -73,9 +75,19 @@ class DirectorActorFactory implements MessageHandlerFactory {
                 myConnectionRetrier.giveUp();
             }
             myDirectorHost = director;
+            final int generation = ++myConnectionGeneration;
+            MessageHandlerFactory currentFactory = new MessageHandlerFactory() {
+                public MessageHandler provideMessageHandler(Connection connection) {
+                    if (generation != myConnectionGeneration) {
+                        if (connection != null) connection.close();
+                        return null;
+                    }
+                    return DirectorActorFactory.this.provideMessageHandler(connection);
+                }
+            };
             myConnectionRetrier =
                 new ConnectionRetrier(director, "director", myNetworkManager,
-                                      this, tr);
+                                      currentFactory, tr);
         }
     }
 
@@ -83,9 +95,19 @@ class DirectorActorFactory implements MessageHandlerFactory {
      * Close connection to the open director.
      */
     void disconnectDirector() {
-        if (myDirector != null) {
-            myDirector.close();
-        }
+        ++myConnectionGeneration;
+        myDirectorHost = null;
+        if (myConnectionRetrier != null) myConnectionRetrier.giveUp();
+        DirectorActor oldDirector = myDirector;
+        myDirector = null;
+        if (oldDirector != null) oldDirector.close();
+    }
+
+    /** Retry unexpected loss, but not deliberate shutdown or an obsolete link. */
+    void directorDisconnected(DirectorActor director) {
+        if (myDirector != director) return;
+        myDirector = null;
+        if (myDirectorHost != null) connectDirector(myDirectorHost);
     }
 
     /**
