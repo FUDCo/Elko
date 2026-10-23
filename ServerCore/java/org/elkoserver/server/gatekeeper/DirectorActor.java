@@ -60,10 +60,11 @@ class DirectorActor extends NonRoutingActor {
      * @param reason  Exception explaining why.
      */
     public void connectionDied(Connection connection, Throwable reason) {
+        if (!amLive) return;
         Trace.comm.eventm("lost director connection " + connection + ": " +
                           reason);
         amLive = false;
-        myFactory.setDirector(null);
+        myFactory.directorDisconnected(this);
         for (Map.Entry<String, ArgRunnable> entry :
                  myPendingReservations.entrySet())
         {
@@ -74,6 +75,7 @@ class DirectorActor extends NonRoutingActor {
                                               key.substring(sep + 1),
                                               "director connection lost"));
         }
+        myPendingReservations.clear();
     }
 
     /**
