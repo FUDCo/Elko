@@ -75,27 +75,22 @@ Elko is open source software, under the MIT license.  See the file `LICENSE.md`
 To build the Java code from the sources directly as is, you will also need the
 [jdep](https://github.com/FUDCo/jdep) utility and GNU Make.
 
-Note that most people doing Java development these days use one of the several
-popular Java IDEs and/or [Maven](https://maven.apache.org), but at the moment
-there's no support here for these; I'm an old time Unix/emacs guy and never had
-much use for such newfangled contraptions (especially Maven, yuck). However,
-the Java source tree is structured in the conventional way, so you should just
-be able to import the source tree into your favorite IDE and press the build
-button.
+The normal development build uses make/jdep. The root pom.xml also supports
+Maven consumers and IDE import.
 
-The `ServerCore` classes have only two external dependencies outside the normal
+The `ServerCore` classes have three external dependencies outside the normal
 class libraries that are part of the standard JDK. These are the [MongoDB
 client libaries](https://docs.mongodb.org/ecosystem/drivers/java/), if want
 support for MongoDB-based object persistence (and which you can do without in a
 pinch, as it is not strictly necessary for all use cases) and the [Apache
 Commons Codec packages](https://commons.apache.org/proper/commons-codec/) (to
 replace the now deprecated Sun base-64 encoder and decoder that Java
-applications relied on for so long).
+applications relied on for so long), plus SelectableTLS for Java NIO networking.
+The published TLS dependency and make/jdep setup are described in
+[Build/SELECTABLE_TLS.md](Build/SELECTABLE_TLS.md). Maven is also supported by
+the root pom.xml.
 
-More detail on building will be presented in an accompanying `BUILD.md` file
-once I get done writing it.
-
-The current build requires Java 8 or newer. MongoDB persistence uses the
+The current build requires Java 17 or newer. MongoDB persistence uses the
 `mongodb-driver-legacy` 5.13.0 artifact and its matching `mongodb-driver-sync`,
 `mongodb-driver-core`, and `bson` dependencies. This retains Elko's existing
 storage API while supporting MongoDB 8. To run the standalone storage regression

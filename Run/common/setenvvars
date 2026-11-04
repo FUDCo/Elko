@@ -46,9 +46,11 @@ REPO_PORT_BASE=${REPO_PORT_BASE:-$((${PORT_BASE} + 50))}
 
 DIRE_PORT_BASE=${DIRE_PORT_BASE:-$((${PORT_BASE} + 60))}
 
-JAVA_RUN=${JAVA_RUN:-"java -server -Xconcurrentio"}
+JAVA_RUN=${JAVA_RUN:-"java -server"}
 
-SERVER_JARS=${DISTI}/elkoserver.jar${DELIM}${DISTE}/mongo.jar${DELIM}${DISTE}/commons-codec.jar${DELIM}${DISTE}/ScalableSSL.jar${DELIM}${DISTI}/fakessl.jar
+MONGO_VERSION=5.13.0
+MONGO_JARS=${DISTE}/mongodb-driver-legacy-${MONGO_VERSION}.jar${DELIM}${DISTE}/mongodb-driver-sync-${MONGO_VERSION}.jar${DELIM}${DISTE}/mongodb-driver-core-${MONGO_VERSION}.jar${DELIM}${DISTE}/bson-${MONGO_VERSION}.jar
+SERVER_JARS=${DISTI}/elkoserver.jar${DELIM}${MONGO_JARS}${DELIM}${DISTE}/commons-codec.jar${DELIM}${DISTE}/selectable-tls.jar
 
 if [ ! $CLASSPATH ]; then
   export CLASSPATH="${SERVER_JARS}"

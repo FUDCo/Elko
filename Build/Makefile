@@ -73,7 +73,9 @@ RUN_DIR := ../Run
 
 
 # Current list of 3rd party components that the server requires
-EXT_JARS = $(EXT_IMPORT_DIR)/mongo.jar:$(EXT_IMPORT_DIR)/ScalableSSL.jar:$(EXT_IMPORT_DIR)/zmq.jar
+MONGO_VERSION = 5.13.0
+MONGO_JARS = $(EXT_IMPORT_DIR)/mongodb-driver-legacy-$(MONGO_VERSION).jar:$(EXT_IMPORT_DIR)/mongodb-driver-sync-$(MONGO_VERSION).jar:$(EXT_IMPORT_DIR)/mongodb-driver-core-$(MONGO_VERSION).jar:$(EXT_IMPORT_DIR)/bson-$(MONGO_VERSION).jar
+EXT_JARS = $(MONGO_JARS):$(EXT_IMPORT_DIR)/commons-codec.jar:$(EXT_IMPORT_DIR)/selectable-tls.jar:$(EXT_IMPORT_DIR)/zmq.jar
 
 # Add 3rd party .jars to the class path
 ifeq ($(CLASSPATH),)

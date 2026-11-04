@@ -15,11 +15,14 @@ cp -R "$root/ServerCore/java/." "$working/Source/"
 version="$working/Source/org/elkoserver/foundation/server/BuildVersion.java"
 sed 's/@BuildVersion@/MongoDB regression/g' "$version.tmpl" > "$version"
 classpath="$jars/commons-codec-1.9.jar"
+tls_jar=${SELECTABLE_TLS_JAR:?Set SELECTABLE_TLS_JAR to the external SelectableTLS jar}
+test -f "$tls_jar"
+classpath="$classpath:$tls_jar"
 for artifact in mongodb-driver-legacy mongodb-driver-sync mongodb-driver-core bson; do
     test -f "$jars/$artifact-5.13.0.jar"
     classpath="$classpath:$jars/$artifact-5.13.0.jar"
 done
-if ! javac -source 8 -target 8 -d "$working/Classes" -cp "$classpath" \
+if ! javac --release 17 -d "$working/Classes" -cp "$classpath" \
     -sourcepath "$working/Source" \
     "$working/Source/org/elkoserver/objdb/store/mongostore/test/MongoObjectStoreTest.java" \
     "$working/Source/org/elkoserver/util/trace/logeater/LogEater.java" \

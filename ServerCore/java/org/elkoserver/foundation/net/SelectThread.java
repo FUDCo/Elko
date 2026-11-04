@@ -1,5 +1,7 @@
 package org.elkoserver.foundation.net;
 
+import com.fudco.selectabletls.TlsProvider;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -11,9 +13,6 @@ import java.util.concurrent.Callable;
 import java.util.Iterator;
 import org.elkoserver.foundation.run.Queue;
 import org.elkoserver.util.trace.Trace;
-
-import scalablessl.SSLSelector;
-import javax.net.ssl.SSLContext;
 
 /**
  * A thread for doing all network I/O operations (send, receive, accept) using
@@ -35,15 +34,15 @@ class SelectThread extends Thread {
      * Constructor.
      *
      * @param mgr  Network manager for this server.
-     * @param sslContext  SSL context to use, if supporting SSL, else null
+     * @param tlsProvider  Shared TLS provider, or null for plaintext only.
      */
-    SelectThread(NetworkManager mgr, SSLContext sslContext) {
+    SelectThread(NetworkManager mgr, TlsProvider tlsProvider) {
         super("Elko Select");
         myMgr = mgr;
         myQueue = new Queue();
         try {
-            if (sslContext != null) {
-                mySelector = SSLSelector.open(sslContext);
+            if (tlsProvider != null) {
+                mySelector = tlsProvider.openSelector();
             } else {
                 mySelector = Selector.open();
             }
