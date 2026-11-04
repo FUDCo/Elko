@@ -1,0 +1,73 @@
+name: Networking and service regressions
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: Java ${{ matrix.java }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17', '25']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - name: Obtain jdep
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: FUDCo/jdep
+          ref: 7b940380b090159b854d69a2a8ba6a8ae9226c84
+          path: External/jdep
+      - name: Build jdep
+        run: |
+          make -C External/jdep
+          echo "$GITHUB_WORKSPACE/External/jdep/bin" >> "$GITHUB_PATH"
+      - name: Download and verify published dependencies
+        run: |
+          mkdir -p Distrib/External
+          cd Distrib/External
+          base=https://repo.maven.apache.org/maven2
+          curl -fsSL "$base/com/fudco/selectable-tls/0.1.0/selectable-tls-0.1.0.jar" -o selectable-tls.jar
+          curl -fsSL "$base/commons-codec/commons-codec/1.9/commons-codec-1.9.jar" -o commons-codec.jar
+          for name in mongodb-driver-legacy mongodb-driver-sync mongodb-driver-core bson; do
+            curl -fsSL "$base/org/mongodb/$name/5.13.0/$name-5.13.0.jar" -o "$name-5.13.0.jar"
+          done
+          sha256sum -c <<'CHECKSUMS'
+          a1a4f9e8f3cc17c373142a37c7b0b26a3726ac81bb67ee568303ba892b29d80f  selectable-tls.jar
+          ad19d2601c3abf0b946b5c3a4113e226a8c1e3305e395b90013b78dd94a723ce  commons-codec.jar
+          0f77c05ea9396c565cce3989c074f7d816fa5c253ddcad58e9861700e5806451  mongodb-driver-legacy-5.13.0.jar
+          b1042221132552cdf56f95bcd61d524b745923d7bc3ace1aaa882a7fd51fb94e  mongodb-driver-sync-5.13.0.jar
+          44f0bc54cba2ef1cbfff8ad5f84e0f1bfccf4886661a93b0e4882ed9c4fdb81d  mongodb-driver-core-5.13.0.jar
+          51f583ee96fda9bc0897e73321c5ae1485102bfd8f95d0d34d7d57919cbc650a  bson-5.13.0.jar
+          CHECKSUMS
+          echo "SELECTABLE_TLS_JAR=$GITHUB_WORKSPACE/Distrib/External/selectable-tls.jar" >> "$GITHUB_ENV"
+      - name: Build with make and jdep
+        run: make -C ServerCore/build
+      - name: Test the make-built server and runtime classpath
+        run: |
+          mkdir -p Distrib/Internal
+          cp ServerCore/built/bin/elkoserver.jar Distrib/Internal/
+          export DIST="$PWD/Distrib"
+          unset CLASSPATH JAVA_RUN
+          source Run/common/setenvvars
+          working=$(mktemp -d)
+          trap 'rm -rf "$working"' EXIT
+          $JAVA_RUN -cp "$CLASSPATH" org.elkoserver.foundation.net.test.TlsTest "$working"
+      - name: Test service regressions
+        run: |
+          bash Build/test-repository.sh "$PWD/Distrib/External/commons-codec.jar"
+          bash Build/test-presence.sh "$PWD/Distrib/External/commons-codec.jar"
+          bash Build/test-gatekeeper.sh "$PWD/Distrib/External/commons-codec.jar"
+      - name: Verify the Maven alternative with the published dependency
+        run: mvn -B -ntp clean package

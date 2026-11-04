@@ -62,15 +62,8 @@ public class TCPConnection
     /** Network manager for this server. */
     private NetworkManager myMgr;
 
-    /** Flag that this is an SSL connection. */
-    private boolean amSecure;
-
     /** Trace object to use for logging associated with this connection. */
     private Trace myTrace;
-
-    /** Empty buffer, for empty sends used to pump SSL logic. */
-    private static final ByteBuffer theEmptyBuffer =
-        ByteBuffer.wrap(new byte[0]);
 
     /**
      * Constructor.
@@ -94,7 +87,6 @@ public class TCPConnection
         throws IOException
     {
         super(mgr);
-        amSecure = isSecure;
         myTrace = trace;
         wakeupSelectForWrite();
         myChannel = channel;
@@ -103,7 +95,9 @@ public class TCPConnection
         amOpen = true;
         channel.configureBlocking(false);
         Socket socket = channel.socket();
-        socket.setSoLinger(true, 0);
+        // TLS close drains accepted output and close_notify. Reset-on-close
+        // would discard those bytes after they have reached the TCP send queue.
+        socket.setSoLinger(!isSecure, 0);
         socket.setReuseAddress(true);
         myRemoteAddr = socket.getInetAddress().getHostAddress() + ":" +
             socket.getPort();
@@ -194,27 +188,24 @@ public class TCPConnection
      */
     void doRead() {
         try {
-            int count;
-            do {
-                count = myChannel.read(myInputBuffer);
+            int count = myChannel.read(myInputBuffer);
 
-                if (count < 0) {
-                    /* EOF: cease to be interested in reads, then throw EOF. */
-                    myKey.interestOps(myKey.interestOps() & ~SelectionKey.OP_READ);
-                    throw new EOFException();
-                } else {
-                    /* Data read: give bytes to framer, then recycle the buffer. */
-                    if (count > 0) {
-                        myFramer.receiveBytes(myInputBuffer.array(),
-                                              myInputBuffer.position());
-                        myInputBuffer.clear();
-                    } else {
-                        if (myTrace.event && Trace.ON) {
-                            myTrace.debugm(this + " zero length read");
-                        }
-                    }
+            if (count < 0) {
+                /* EOF: cease to be interested in reads, then throw EOF. */
+                myKey.interestOps(myKey.interestOps() & ~SelectionKey.OP_READ);
+                throw new EOFException();
+            } else if (count > 0) {
+                /* Data read: give bytes to framer, then recycle the buffer. */
+                myFramer.receiveBytes(myInputBuffer.array(),
+                                      myInputBuffer.position());
+                myInputBuffer.clear();
+            } else {
+                if (myTrace.event && Trace.ON) {
+                    myTrace.debugm(this + " zero length read");
                 }
-            } while (count > 0 && amSecure);
+            }
+            /* Buffered TLS plaintext remains selectable; one bounded read per
+               dispatch gives other connections their turn without pumping. */
         } catch (Throwable t) {
             /* If anything bad happens during read, the connection is dead. */
             if (myTrace.debug) {
@@ -267,13 +258,6 @@ public class TCPConnection
                 if (myOutputBuffer.remaining() == 0) {
                     myOutputBuffer = null;
                 }
-            } else if (amSecure) {
-                /* ScalableSSL sometimes requires us to do empty writes to pump
-                   SSL protocol handshaking. */
-                if (myTrace.event && Trace.ON) {
-                    myTrace.debugm(this + " SSL empty write");
-                }
-                myChannel.write(theEmptyBuffer);
             }
         } catch (IOException e) {
             myTrace.usagem(this + " IOException: " + e.getMessage());

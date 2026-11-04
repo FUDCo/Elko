@@ -11,8 +11,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import org.elkoserver.util.trace.Trace;
 
-import scalablessl.SSLServerSocketChannel;
-
 /**
  * A listener for new inbound TCP connections to some server port.
  */
@@ -74,12 +72,12 @@ class Listener {
         NetAddr netAddr = new NetAddr(localAddress);
         myOptIP = netAddr.inetAddress();
         int localPort = netAddr.getPort();
-        SSLServerSocketChannel asSSL = null;
-
         if (secure) {
-            asSSL = SSLServerSocketChannel.open(mgr.sslContext());
-            myChannel = asSSL;
-            asSSL.socket().setNeedClientAuth(false);
+            if (mgr.tlsProvider() == null) {
+                throw new IOException(
+                    "Secure listener requires conf.ssl.enable=true");
+            }
+            myChannel = mgr.tlsProvider().openServerSocketChannel();
         } else {
             myChannel = ServerSocketChannel.open();
         }

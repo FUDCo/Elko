@@ -1,5 +1,6 @@
 package org.elkoserver.foundation.net;
 
+import com.fudco.selectabletls.TlsProvider;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -42,8 +43,8 @@ public class NetworkManager {
     /** System load tracker. */
     private LoadMonitor myLoadMonitor;
 
-    /** Initialized SSL context, if supporting SSL, else null. */
-    private SSLContext mySSLContext;
+    /** Shared TLS transport provider, or null for plaintext-only operation. */
+    private TlsProvider myTLSProvider;
 
     /** Select thread for non-blocking I/O. */
     private SelectThread mySelectThread;
@@ -180,7 +181,7 @@ public class NetworkManager {
      */
     private void ensureSelectThread() {
         if (mySelectThread == null) {
-            mySelectThread = new SelectThread(this, mySSLContext);
+            mySelectThread = new SelectThread(this, myTLSProvider);
         }
     }
 
@@ -390,8 +391,9 @@ public class NetworkManager {
             keyManagerFactory.init(keys, passwordChars);
             KeyManager keyManagers[] = keyManagerFactory.getKeyManagers();
 
-            mySSLContext = SSLContext.getInstance("TLS");
-            mySSLContext.init(keyManagers, null, null);
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(keyManagers, null, null);
+            myTLSProvider = new TlsProvider(context);
 
         /* A wide variety of different kinds of problems can happen here, all
            of which entail some form of system misconfiguration and are
@@ -408,11 +410,11 @@ public class NetworkManager {
     }
 
     /**
-     * Obtain the SSL context for SSL connections, if there is one.
+     * Obtain the shared TLS provider, if TLS is enabled.
      *
-     * @return the SSL context, if supporting SSL, else null.
+     * @return the TLS provider, or null if TLS is disabled.
      */
-    SSLContext sslContext() {
-        return mySSLContext;
+    TlsProvider tlsProvider() {
+        return myTLSProvider;
     }
 }

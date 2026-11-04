@@ -1,25 +1,16 @@
 Configuring Elko servers for SSL support
 
-1. Make sure the SSL library .jar is on the classpath.  There are two versions
-   of this:
+1. Use Java 17 or later and put the external SelectableTLS library on the
+   classpath for both plaintext-only and TLS-enabled servers. The published
+   coordinates are com.fudco:selectable-tls:0.1.0. This is a
+   separately built dependency, not a package compiled inside Elko.
 
-        ScalableSSL.jar -- you obtain this under license from Melbourne
-            Software.  See:
-                http://www.telekinesis.com.au/wipv3_6/page2/show.jsp?id=230173&db=Entries
-            This library provides full support for SSL in the Elko server.
-
-        fakessl.jar -- this is built in the Elko distribution.  This is a
-            development and testing stub library. It provides no actual SSL
-            support but allows the SSL-enabled server to load and run without
-            unresolved class load errors as long as you don't actually
-            configure any SSL listeners (if you do configure an SSL listener,
-            you'll just get an error message in the server log).
-
-   You can include both of these .jars on your classpath, but if you do, be
-   sure that ScalableSSL.jar is earlier in the classpath than fakessl.jar.  If
-   you do this, you can, for example, use a single script to set up your
-   environment variables for both development and production even though only
-   the production environment actually has a ScalableSSL.jar file installed.
+   For the legacy Makefile/run scripts, place the library at
+   Distrib/External/selectable-tls.jar. Remove obsolete ScalableSSL.jar and
+   fakessl.jar classpath entries. No proprietary library or fake replacement
+   is used by this build. The dependency is available from Maven Central and
+   the FUDCo/SelectableTLS GitHub release v0.1.0.
+   See Build/SELECTABLE_TLS.md for installation, hashes and make/jdep commands.
 
 2. Configure the server startup script (or Java properties file) to enable and
    configure SSL support generally.  The relevant properties are:
@@ -81,12 +72,18 @@ Configuring Elko servers for SSL support
    NOT "https" -- HTTPS is just HTTP over SSL), except for the addition of the
    "secure" setting in the SSL case.
 
-4. When running with ScalableSSL, you will need to have your license key for
-   the library, which you get from Melbourne Software.  This lives in a file
-   called "serial.txt" in the server's run directory.  You may also wish to
-   have a ScalableSSL_Logging.properties properties file (in the same
-   directory) to configure the library's own internal logging -- mostly to shut
-   it up.  A couple of examples of the latter property file (one to be
-   maximally verbose and the other to be silent) are included in the Elko
-   distribution.
+4. SelectableTLS uses the JDK's JSSE implementation and enables TLS 1.2 and
+   TLS 1.3 by default. It requires no license key or serial.txt file. TLS
+   negotiation proceeds independently of application read/write interests.
+   Normal TLS connection close drains accepted output and sends close_notify;
+   handshake and output shutdown each have a default 30-second deadline.
+
+   Run the Java integration test with:
+
+      SELECTABLE_TLS_JAR=/path/to/selectable-tls.jar \
+          bash Build/test-tls.sh /path/to/commons-codec-1.9.jar
+
+   This generates temporary credentials and checks authenticated TLS alongside
+   plaintext RTCP and HTTP messaging, final output delivery and reconnects.
+   Existing standalone regression scripts also require SELECTABLE_TLS_JAR.
 

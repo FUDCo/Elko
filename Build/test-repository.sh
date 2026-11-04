@@ -10,13 +10,15 @@ test_root=$(cd "$(dirname "$0")/.." && pwd)
 source_root=${2:-$test_root}
 codec=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 test -f "$codec"
+tls_jar=${SELECTABLE_TLS_JAR:?Set SELECTABLE_TLS_JAR to the external SelectableTLS jar}
+test -f "$tls_jar"
 working=$(mktemp -d "${TMPDIR:-/tmp}/elko-repository-test.XXXXXX")
 trap 'rm -rf "$working"' EXIT
 mkdir "$working/Source" "$working/Classes" "$working/Data"
 cp -R "$source_root/ServerCore/java/." "$working/Source/"
 version="$working/Source/org/elkoserver/foundation/server/BuildVersion.java"
 sed 's/@BuildVersion@/Repository initialization regression/g' "$version.tmpl" > "$version"
-if ! javac -d "$working/Classes" -cp "$codec" -sourcepath "$working/Source" \
+if ! javac --release 17 -d "$working/Classes" -cp "$codec:$tls_jar" -sourcepath "$working/Source" \
     "$working/Source/org/elkoserver/foundation/boot/Boot.java" \
     "$working/Source/org/elkoserver/server/repository/RepositoryBoot.java" \
     "$working/Source/org/elkoserver/objdb/store/filestore/FileObjectStore.java" \
@@ -25,5 +27,5 @@ if ! javac -d "$working/Classes" -cp "$codec" -sourcepath "$working/Source" \
     cat "$working/compiler.log" >&2
     exit 1
 fi
-java -cp "$working/Classes:$codec" \
+java -cp "$working/Classes:$codec:$tls_jar" \
     org.elkoserver.server.repository.test.RepositoryTest "$working"
