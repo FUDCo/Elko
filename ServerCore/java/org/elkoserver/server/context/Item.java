@@ -181,6 +181,21 @@ public class Item extends BasicObject {
         }
         setContainer(null);
         markAsDeleted();
+        /* Persist the deletion NOW, before remove() drops this object from the
+           contextor's table.  markAsDeleted() only sets a dirty flag; the
+           delete does not reach the object database until a checkpoint runs
+           and doCheckpoint() sees amDeleted and calls writeObjectDelete().
+           Once remove() has dropped the object there is nothing left to
+           checkpoint it, so the stored document SURVIVES -- carrying whatever
+           state was last written, which for an item deleted mid-use is its
+           position and contents at that moment.  The object then reappears at
+           the next context activation: a Habitat Paper destroyed by PSENDMAIL
+           came back in the sender's HANDS as a written page, and since
+           Paper.GET is gated on empty_handed that silently disabled all mail
+           for that avatar.  Same reasoning as openContainer() and
+           closeContainer() above -- state that gates what gets loaded later
+           must never be left dirty in memory. */
+        checkpoint();
         myContextor.remove(this);
     }
 
