@@ -1,0 +1,6 @@
+# JitPack build config. Upstream's pom compiles with <release>17</release>, but
+# JitPack's default JDK is 8, which fails with "invalid target release: 17".
+jdk:
+  - openjdk17
+install:
+  - mvn -B -ntp install -DskipTests
